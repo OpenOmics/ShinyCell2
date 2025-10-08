@@ -99,6 +99,7 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
     if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))){ 
       readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)}
     readr::write_file(wrSVmainA1(i), file = fname, append = TRUE)
+    readr::write_file(wrSVmainS3(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainA2(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainA3(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainB1(i), file = fname, append = TRUE)
@@ -123,6 +124,7 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "bw.rds"))){
       readr::write_file(wrUImainT1(shiny.prefix), file = fname, append = TRUE)}
     readr::write_file(wrUImainA1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
+    readr::write_file(wrUImainS3(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainA2(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainA3(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainB1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
@@ -139,6 +141,7 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
       if(file.exists(paste0(shiny.dir, "/", shiny.prefix[i], "bw.rds"))){ 
         readr::write_file(wrUImainT1(shiny.prefix[i]), file = fname, append = TRUE)}
       readr::write_file(wrUImainA1(shiny.prefix[i], defPtSiz[i]), file = fname, append = TRUE)
+      readr::write_file(wrUImainS2(shiny.prefix[i], defPtSiz[1]), file = fname, append = TRUE)
       readr::write_file(wrUImainA2(shiny.prefix[i], defPtSiz[i]), file = fname, append = TRUE)
       readr::write_file(wrUImainA3(shiny.prefix[i], defPtSiz[i]), file = fname, append = TRUE)
       readr::write_file(wrUImainB1(shiny.prefix[i], defPtSiz[i]), file = fname, append = TRUE)
