@@ -24,6 +24,7 @@ wrUIload <- function(prefix) {
   glue::glue(
     '{prefix}conf = readRDS("./{prefix}conf.rds")\n',
     '{prefix}def  = readRDS("./{prefix}def.rds")\n',
+    '{prefix}meta = readRDS("./{prefix}meta.rds")\n',
     '\n'
   )
 }
@@ -195,6 +196,137 @@ wrUImainA1 <- function(prefix, ptsiz) {
     '  \n'
   )
 }
+
+
+#' Write code for ui.R
+#'
+#' @rdname wrUImainS3
+#' @export wrUImainS3
+#'
+wrUImainS3 <- function(prefix, ptsiz) {
+  glue::glue(
+    '  ### Tab1.s3: Split-out dimred\n',
+    '  tabPanel(\n',
+    '    HTML("Split-out DimRed"),\n',
+    '    h4("Faceted plots for dimensional reduction"),\n',
+    '    "Split on metadata",\n',
+    '    br(), br(),\n',
+    '    # Assay selection\n',
+    '    fluidRow(\n',
+    '      column(3, selectInput("{prefix}s3ass1", "Assay:",\n',
+    '        choices = {prefix}def$assay,\n',
+    '        selected = {prefix}def$assay[1]\n',
+    '      ))\n',
+    '    ),\n',
+    '    # Reduction selection\n',
+    '    fluidRow(\n',
+    '      column(\n',
+    '        3, fluidRow(\n',
+    '          column(\n',
+    '            12, selectInput("{prefix}s3dr", "Reduction:",\n',
+    '              choices = {prefix}def$dimrd,\n',
+    '              selected = {prefix}def$dimrd[1]\n',
+    '            )\n',
+    '          )\n',
+    '        )\n',
+    '      )\n',
+    '    ), # End of column (6 space)\n',
+    '    fluidRow(\n',
+    '      column(\n',
+    '        3,\n',
+    '        style = "border-right: 2px solid black",\n',
+    '        # Split by selection\n',
+    '        selectInput("{prefix}s3inp3", "Split by",\n',
+    '          choices = {prefix}conf[grp == TRUE]$UI,\n',
+    '          selected = {prefix}def$grp1\n',
+    '        ) %>% helper(\n',
+    '            type = "inline", size = "m", fade = TRUE,\n',
+    '            title = "Cell information to group cells by",\n',
+    '            content = c("Select categorical cell information to split single cells by this categorical covariate")\n',
+    '          ),\n',
+    '        selectizeInput(\n',
+    '          "{prefix}s3feat1",\n',
+    '          "Gene/feature:",\n',
+    '          choices = {prefix}def$genes[[{prefix}def$assay[1]]],\n',
+    '          selected = {prefix}def$genes[[{prefix}def$assay[1]]][[1]],\n',
+    '          options = list(\n',
+    '            maxOptions = 7,\n',
+    '            create = FALSE,\n',
+    '            persist = TRUE\n',
+    '          )\n',
+    '        ),\n',
+    '        br(), br(),\n',
+    '        actionButton("{prefix}s3togL", "Toggle to subset cells"),\n',
+    '        conditionalPanel(\n',
+    '          condition = "input.{prefix}s3togL % 2 == 1",\n',
+    '          selectInput("{prefix}s3sub1", "Cell information to subset:",\n',
+    '            choices = {prefix}conf[grp == TRUE]$UI,\n',
+    '            selected = {prefix}def$grp1\n',
+    '          ),\n',
+    '          uiOutput("{prefix}s3sub1.ui"),\n',
+    '          actionButton("{prefix}s3sub1all", "Select all groups", class = "btn btn-primary"),\n',
+    '          actionButton("{prefix}s3sub1non", "Deselect all groups", class = "btn btn-primary")\n',
+    '        ),\n',
+    '        br(), br(),\n',
+    '        actionButton("{prefix}s3tog2", "Toggle graphics controls"),\n',
+    '        conditionalPanel(\n',
+    '          condition = "input.{prefix}s3tog2 % 2 == 1",\n',
+    '          sliderInput("{prefix}s3siz", "Point size:",\n',
+    '            min = 1, max = 4, value = 1.25, step = 0.25\n',
+    '          ),\n',
+    '          radioButtons("{prefix}s3psz", "Plot size:",\n',
+    '            choices = c("Small", "Medium", "Large"),\n',
+    '            selected = "Large", inline = TRUE\n',
+    '          ),\n',
+    '          radioButtons("{prefix}s3fsz", "Font size:",\n',
+    '            choices = c("Small", "Medium", "Large"),\n',
+    '            selected = "Large", inline = TRUE\n',
+    '          ),\n',
+    '          radioButtons("{prefix}s3asp", "Aspect ratio:",\n',
+    '            choices = c("Square", "Fixed", "Free"),\n',
+    '            selected = "Free", inline = TRUE\n',
+    '          ),\n',
+    '          checkboxInput("{prefix}s3txt", "Show axis text", value = FALSE)\n',
+    '        ),\n',
+    '        br(), br(),\n',
+    '        actionButton("{prefix}s3tog3", "Toggle plot controls"),\n',
+    '        conditionalPanel(\n',
+    '          condition = "input.{prefix}s3tog3 % 2 == 1",\n',
+    '          radioButtons("{prefix}s3col1", "Colour (Continuous data):",\n',
+    '            choices = c("White-Red", "Blue-Yellow-Red", "Yellow-Green-Purple"),\n',
+    '            selected = "Blue-Yellow-Red"\n',
+    '          ),\n',
+    '          radioButtons("{prefix}s3ord1", "Plot order:",\n',
+    '            choices = c("Max-1st", "Min-1st", "Original", "Random"),\n',
+    '            selected = "Original", inline = TRUE\n',
+    '          )\n',
+    '        ),\n',
+    '      ), # End of column (6 space)\n',
+    '      column(\n',
+    '        9, uiOutput("{prefix}s3oup1.ui"),\n',
+    '        downloadButton("{prefix}s3oup1.pdf", "Download PDF"),\n',
+    '        downloadButton("{prefix}s3oup1.png", "Download PNG"), br(),\n',
+    '        div(\n',
+    '          style = "display:inline-block",\n',
+    '          numericInput("{prefix}s3oup1.h", "PDF / PNG height:",\n',
+    '            width = "138px",\n',
+    '            min = 4, max = 20, value = 8, step = 0.5\n',
+    '          )\n',
+    '        ),\n',
+    '        div(\n',
+    '          style = "display:inline-block",\n',
+    '          numericInput("{prefix}s3oup1.w", "PDF / PNG width:",\n',
+    '            width = "138px",\n',
+    '            min = 4, max = 20, value = 10, step = 0.5\n',
+    '          )\n',
+    '        )\n',
+    '      ) # End of column (6 space)\n',
+    '    ) # End of fluidRow (4 space)\n',
+    '  ), # End of tab (2 space)\n',
+    '  \n'
+  )
+}
+
 
 #' Write code for ui.R
 #'
@@ -1188,5 +1320,3 @@ wrUIga <- function(gaID) {
              'gtag(\'config\', \'{gaID}\'); \n',
              '</script> \n')
 }
-
-
