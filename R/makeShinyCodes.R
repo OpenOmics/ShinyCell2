@@ -96,11 +96,14 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
     if(file.exists(paste0(shiny.dir, "/", i, "image.rds"))){
       readr::write_file(wrSVmainS1(i), file = fname, append = TRUE)
       readr::write_file(wrSVmainS2(i), file = fname, append = TRUE)}
-    if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))){ 
-      readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)}
+      if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))){ 
+        readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)}
     readr::write_file(wrSVmainA1(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainS3(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainA2(i), file = fname, append = TRUE)
+    if(file.exists(paste0(shiny.dir, "/", i, "deg.h5"))){
+      readr::write_file(wrSVmainD1(i), file = fname, append = TRUE)
+    }
     readr::write_file(wrSVmainA3(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainB1(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainB2(i), file = fname, append = TRUE)
@@ -126,6 +129,9 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
     readr::write_file(wrUImainA1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainS3(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainA2(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
+    if(file.exists(paste0(shiny.dir, "/", i, "deg.h5"))){
+      readr::write_file(wrUImainD1(i), file = fname, append = TRUE)
+    }
     readr::write_file(wrUImainA3(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainB1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainB2(shiny.prefix), file = fname, append = TRUE)

@@ -78,7 +78,7 @@ write_df_chunked_hdf5r <- function(df, filename, key = "data",
 
     # Delete if exists
     if (group$exists(col_name)) {
-      group[[col_name]]$delete()
+       group$link_delete(col_name)
     }
 
     # Create dataset with chunking
