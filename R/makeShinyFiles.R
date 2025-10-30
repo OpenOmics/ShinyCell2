@@ -94,15 +94,27 @@ makeShinyFiles <- function(
         )
       }
     }
-    if (!is.na(precomputed.deg) && !is.na(clusters) && file.exists(precomputed.deg)) {
-      cat(paste0("SUCCESS - precomputed.deg exists and running 'makeShinyFilesDEG': ", normalizePath(precomputed.deg)))
-      makeShinyFilesDEG(
-        obj, scConf, shiny.dir, shiny.prefix, precomputed.deg, clusters, chunkSize
-      )
-    } else if(!is.na(precomputed.deg) || !file.exists(precomputed.deg)) {
-      cat(paste0("ERROR - precomputed.deg does not point to existing file: ", normalizePath(precomputed.deg)))
-    } else if(is.na(clusters)) {
-      cat("ERROR - clusters not specified, unable to make DEG tab")
+
+    # DEG page setup, if pre.computed.deg is valid
+    valid_precomputed <- !is.null(precomputed.deg) &&
+                     length(precomputed.deg) == 1 &&
+                     !is.na(precomputed.deg) &&
+                     nzchar(as.character(precomputed.deg))
+
+    valid_clusters <- !is.null(clusters) &&
+                      length(clusters) >= 1 &&
+                      !any(is.na(clusters))
+
+    if (valid_precomputed && valid_clusters) {
+      precomputed_path <- as.character(precomputed.deg)
+      if (file.exists(precomputed_path)) {
+        cat(paste0("SUCCESS - precomputed.deg exists and running 'makeShinyFilesDEG': ", normalizePath(precomputed_path)))
+        makeShinyFilesDEG(
+          obj, scConf, shiny.dir, shiny.prefix, precomputed_path, clusters, chunkSize
+        )
+      } else {
+        err(paste0("Precomputed DEG file not found: ", precomputed_path))
+      }
     }
   } else if (class(obj)[1] == "ArchRProject") {
     # ArchR object
