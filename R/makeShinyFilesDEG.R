@@ -56,14 +56,13 @@
 #'
 #' @export
 makeShinyFilesDEG <- function(
-  obj,
-  scConf,
-  shiny.dir,
-  shiny.prefix,
-  precomputed.deg,
-  clusters,
-  chunkSize = 500
-) {
+    obj,
+    scConf,
+    shiny.dir,
+    shiny.prefix,
+    precomputed.deg,
+    clusters,
+    chunkSize = 500) {
   if (!clusters %in% names(obj@meta.data)) {
     stop(paste0('"', clusters, '" not found in Seurat object meta data!'))
   }
@@ -78,7 +77,7 @@ makeShinyFilesDEG <- function(
 
   # read in clustermap
   cell_id <- "orig.ident"
-  clustermap <- subset(obj@meta.data, select=c(cell_id, clusters))
+  clustermap <- subset(obj@meta.data, select = c(cell_id, clusters))
 
   # cluste h5 map creation
   n_rows <- nrow(clustermap)
@@ -96,7 +95,31 @@ makeShinyFilesDEG <- function(
   )
 
   # read in markergenes
-  markergenes <- read.table(precomputed.deg, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  markergenes <- tryCatch(
+    {
+      # Try tab-separated first
+      read.table(precomputed.deg,
+        header = TRUE, sep = "\t",
+        stringsAsFactors = FALSE, quote = "\""
+      )
+    },
+    error = function(e) {
+      # Fall back to whitespace-separated
+      read.table(precomputed.deg,
+        header = TRUE, sep = "",
+        stringsAsFactors = FALSE, quote = "\""
+      )
+    }
+  )
+
+  # Verify we got the expected columns
+  expected_cols <- c("p_val", "avg_log2FC", "pct.1", "pct.2", "p_val_adj", "cluster", "gene")
+  if (ncol(markergenes) == 1 || !all(expected_cols %in% colnames(markergenes))) {
+    stop(
+      "Failed to parse marker genes file correctly. Expected columns: ",
+      paste(expected_cols, collapse = ", ")
+    )
+  }
 
   # markergene h5 creation
   n_rows <- nrow(markergenes)

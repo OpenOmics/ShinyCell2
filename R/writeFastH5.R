@@ -78,18 +78,33 @@ write_df_chunked_hdf5r <- function(df, filename, key = "data",
 
     # Delete if exists
     if (group$exists(col_name)) {
-       group$link_delete(col_name)
+      group$link_delete(col_name)
     }
 
     # Create dataset with chunking
     if (is.character(values)) {
-      # String data - create without explicit dtype
+      # String data - use explicit space and string dtype
+      space <- H5S$new("simple", dims = n_rows, maxdims = n_rows)
+
+      # Create variable-length string dtype
+      str_dtype <- H5T_STRING$new(size = Inf)
+      str_dtype$set_cset(h5const$H5T_CSET_UTF8)
+
       dataset <- group$create_dataset(
         name = col_name,
-        robj = values,
+        dtype = str_dtype,
+        space = space,
         chunk_dims = min(chunk_rows, n_rows),
         gzip_level = compression_level
       )
+
+      # Write data in chunks
+      for (i in seq(1, n_rows, by = chunk_rows)) {
+        end_idx <- min(i + chunk_rows - 1, n_rows)
+        dataset[i:end_idx] <- values[i:end_idx]
+      }
+      space$close()
+      str_dtype$close()
     } else {
       # Numeric data - use space and chunk specifications
       space <- H5S$new("simple", dims = n_rows, maxdims = n_rows)
