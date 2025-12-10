@@ -31,10 +31,14 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     cat("Assay type: Assay5 (Seurat v5)\n")
     cat("Available layers in assay:", names(obj@assays[[gex.assay]]@layers), "\n")
-    gex.matdim = dim(obj@assays[[gex.assay]]@layers[[gex.slot]])
+    
+    # FIX: For Assay5, get cells from the Seurat object's cell names, not layer colnames
+    # The layers may be split and don't have colnames directly accessible
+    assay.cells = Cells(obj@assays[[gex.assay]])
+    
+    # Get matrix dimension from the assay itself
+    gex.matdim = c(nrow(obj@assays[[gex.assay]]), length(assay.cells))
     cat("Matrix dimensions:", gex.matdim, "\n")
-    # Get available cells in this assay
-    assay.cells = colnames(obj@assays[[gex.assay]]@layers[[gex.slot]])
   }else{
     cat("Assay type: Legacy Assay (Seurat v3/v4)\n")
     cat("Available slots in assay:", slotNames(obj@assays[[gex.assay]]), "\n")
