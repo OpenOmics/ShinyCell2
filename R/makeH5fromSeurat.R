@@ -32,6 +32,21 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   # Filter sc1meta to only include cells present in this assay
   sc1meta.filtered = sc1meta[sc1meta$cellID %in% assay.cells, ]
   
+  # ADDED: Ensure cell IDs are in the correct order and all exist in assay
+  sc1meta.filtered = sc1meta.filtered[sc1meta.filtered$cellID %in% assay.cells, ]
+  
+  # ADDED: Verify all cellIDs in filtered metadata exist in assay
+  missing_cells = setdiff(sc1meta.filtered$cellID, assay.cells)
+  if(length(missing_cells) > 0){
+    warning(paste("Removing", length(missing_cells), "cells not found in assay"))
+    sc1meta.filtered = sc1meta.filtered[!sc1meta.filtered$cellID %in% missing_cells, ]
+  }
+  
+  # ADDED: Check if we have any cells left
+  if(nrow(sc1meta.filtered) == 0){
+    stop("No overlapping cells found between metadata and assay data")
+  }
+  
   sc1gexpr <- H5File$new(filename, mode = "w")
   sc1gexpr.grp <- sc1gexpr$create_group("grp")
   sc1gexpr.grp.data <- sc1gexpr.grp$create_dataset(
@@ -72,5 +87,3 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   # Output gene names
   return(gex.rownm)
 }
-
-
