@@ -165,7 +165,23 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     # Use LayerData to properly access Assay5 data
-    gex.data = LayerData(obj, assay = gex.assay, layer = gex.slot)
+    # Try LayerData first (Seurat v5), fall back to layer access if that fails
+    gex.data = tryCatch({
+      LayerData(obj, assay = gex.assay, layer = gex.slot)
+    }, error = function(e) {
+      cat("LayerData failed, trying direct layer access:", e$message, "\n")
+      # Try direct layer access
+      layer_name = gex.slot
+      if(!layer_name %in% names(obj@assays[[gex.assay]]@layers)){
+        # Try to find a matching layer (e.g., "data" might be stored as "data.5")
+        matching_layers = grep(paste0("^", gex.slot), names(obj@assays[[gex.assay]]@layers), value = TRUE)
+        if(length(matching_layers) > 0){
+          cat("Using layer:", matching_layers[1], "\n")
+          layer_name = matching_layers[1]
+        }
+      }
+      obj@assays[[gex.assay]]@layers[[layer_name]]
+    })
     
     for(i in 1:nChunk){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
