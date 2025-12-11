@@ -136,6 +136,20 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   cat("Final number of cells to process:", nrow(sc1meta.filtered), "\n")
   cat("==========================================\n")
   
+  # CRITICAL CHECK: Ensure we have cells to process
+  if(nrow(sc1meta.filtered) == 0){
+    cat("\n!!! CRITICAL ERROR !!!\n")
+    cat("No cells remaining after filtering!\n")
+    cat("Total cells in sc1meta:", nrow(sc1meta), "\n")
+    cat("Total cells in assay:", length(assay.cells), "\n")
+    cat("Overlap count:", sum(sc1meta$cellID %in% assay.cells), "\n")
+    cat("\nSample cellIDs from sc1meta (first 20):\n")
+    print(head(sc1meta$cellID, 20))
+    cat("\nSample cellIDs from assay (first 20):\n")
+    print(head(assay.cells, 20))
+    stop("No cells to process - check cell ID formatting/naming mismatch")
+  }
+  
   sc1gexpr <- H5File$new(filename, mode = "w")
   sc1gexpr.grp <- sc1gexpr$create_group("grp")
   sc1gexpr.grp.data <- sc1gexpr.grp$create_dataset(
@@ -150,15 +164,16 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   # Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
+    # Use LayerData to properly access Assay5 data
+    gex.data = LayerData(obj, assay = gex.assay, layer = gex.slot)
+    
     for(i in 1:nChunk){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
-        obj[[gex.assay]][gex.slot][
-          ((i-1)*chk+1):(i*chk), sc1meta.filtered$cellID])
+        gex.data[((i-1)*chk+1):(i*chk), sc1meta.filtered$cellID])
     }
       sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
-        obj[[gex.assay]][gex.slot][
-          (i*chk+1):gex.matdim[1], sc1meta.filtered$cellID])
-      gex.rownm = rownames(obj[[gex.assay]][gex.slot])
+        gex.data[(i*chk+1):gex.matdim[1], sc1meta.filtered$cellID])
+      gex.rownm = rownames(gex.data)
       
   } else {
     for(i in 1:nChunk){
