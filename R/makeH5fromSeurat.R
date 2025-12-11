@@ -32,9 +32,67 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     cat("Assay type: Assay5 (Seurat v5)\n")
     cat("Available layers in assay:", names(obj@assays[[gex.assay]]@layers), "\n")
     
-    # FIX: For Assay5, get cells from the Seurat object's cell names, not layer colnames
-    # The layers may be split and don't have colnames directly accessible
-    assay.cells = Cells(obj@assays[[gex.assay]])
+    # DEBUG: Try multiple methods to get cell names
+    cat("\n--- Attempting different methods to get cell names ---\n")
+    
+    # Method 1: Cells() on assay
+    assay.cells.method1 = tryCatch({
+      Cells(obj@assays[[gex.assay]])
+    }, error = function(e) {
+      cat("Method 1 (Cells on assay) failed:", e$message, "\n")
+      NULL
+    })
+    cat("Method 1 result length:", length(assay.cells.method1), "\n")
+    
+    # Method 2: Cells() on main object
+    assay.cells.method2 = tryCatch({
+      Cells(obj)
+    }, error = function(e) {
+      cat("Method 2 (Cells on object) failed:", e$message, "\n")
+      NULL
+    })
+    cat("Method 2 result length:", length(assay.cells.method2), "\n")
+    cat("First few cells (method 2):", head(assay.cells.method2, 10), "\n")
+    
+    # Method 3: colnames on main object
+    assay.cells.method3 = tryCatch({
+      colnames(obj)
+    }, error = function(e) {
+      cat("Method 3 (colnames on object) failed:", e$message, "\n")
+      NULL
+    })
+    cat("Method 3 result length:", length(assay.cells.method3), "\n")
+    
+    # Method 4: Direct layer access
+    assay.cells.method4 = tryCatch({
+      if("data" %in% names(obj@assays[[gex.assay]]@layers)){
+        colnames(obj@assays[[gex.assay]]@layers$data)
+      } else {
+        NULL
+      }
+    }, error = function(e) {
+      cat("Method 4 (layer colnames) failed:", e$message, "\n")
+      NULL
+    })
+    cat("Method 4 result length:", length(assay.cells.method4), "\n")
+    
+    # Use the first method that returns non-NULL cells
+    assay.cells = NULL
+    for(method in list(assay.cells.method2, assay.cells.method3, assay.cells.method1, assay.cells.method4)){
+      if(!is.null(method) && length(method) > 0){
+        assay.cells = method
+        break
+      }
+    }
+    
+    if(is.null(assay.cells) || length(assay.cells) == 0){
+      cat("\n!!! ALL METHODS FAILED - Inspecting object structure !!!\n")
+      cat("Assay class:", class(obj@assays[[gex.assay]]), "\n")
+      cat("Assay slot names:", slotNames(obj@assays[[gex.assay]]), "\n")
+      cat("Layer names:", names(obj@assays[[gex.assay]]@layers), "\n")
+      cat("First layer class:", class(obj@assays[[gex.assay]]@layers[[1]]), "\n")
+      stop("Cannot extract cell names from Assay5 object")
+    }
     
     # Get matrix dimension from the assay itself
     gex.matdim = c(nrow(obj@assays[[gex.assay]]), length(assay.cells))
@@ -86,13 +144,12 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     chunk_dims = c(1, nrow(sc1meta.filtered)))
   chk = chunkSize
   while(chk > (gex.matdim[1]-8)){
-    chk = floor(chk / 2)     # Account for cases where nGene < chunkSize
+    chk = floor(chk / 2)
   } 
   
   # Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
-    # Seurat v5
     for(i in 1:nChunk){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
         obj[[gex.assay]][gex.slot][
@@ -115,6 +172,5 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       gex.rownm = rownames(slot(obj@assays[[gex.assay]], gex.slot))
   }
   sc1gexpr$close_all()
-  # Output gene names
   return(gex.rownm)
 }
