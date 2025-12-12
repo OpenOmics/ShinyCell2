@@ -162,30 +162,81 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     chk = floor(chk / 2)
   } 
   
-  # Start writing to file
+# Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
-    # For Assay5, use LayerData which handles layer name mapping
+    # For Assay5, we need to carefully retrieve the correct layer
     cat("Attempting to retrieve layer:", gex.slot, "\n")
-    gex.data = tryCatch({
-      LayerData(obj, assay = gex.assay, layer = gex.slot)
-    }, error = function(e) {
-      cat("LayerData failed:", e$message, "\n")
-      cat("Trying direct layer access...\n")
-      # Try direct layer access
-      layer_name = gex.slot
-      if(!layer_name %in% names(obj@assays[[gex.assay]]@layers)){
-        # Try to find a matching layer (e.g., "data" might be stored as "data.5")
-        matching_layers = grep(paste0("^", gex.slot), names(obj@assays[[gex.assay]]@layers), value = TRUE)
-        if(length(matching_layers) > 0){
-          cat("Using layer:", matching_layers[1], "\n")
-          layer_name = matching_layers[1]
-        } else {
-          stop(paste("Cannot find layer matching", gex.slot, "in available layers:", 
-                     paste(names(obj@assays[[gex.assay]]@layers), collapse=", ")))
+    
+    # First, check what layers exist and their dimensions
+    layer_names = names(obj@assays[[gex.assay]]@layers)
+    cat("Available layers and their dimensions:\n")
+    for(ln in layer_names){
+      layer_dims = tryCatch({
+        dim(obj@assays[[gex.assay]]@layers[[ln]])
+      }, error = function(e) c(NA, NA))
+      cat("  ", ln, ": ", paste(layer_dims, collapse=" x "), "\n")
+    }
+    
+    # Strategy: Find the layer with correct number of cells (95494)
+    # Prefer exact match to gex.slot, but fall back to finding right-sized layer
+    target_layer = NULL
+    
+    # First try: exact match
+    if(gex.slot %in% layer_names){
+      test_dims = dim(obj@assays[[gex.assay]]@layers[[gex.slot]])
+      if(test_dims[2] == gex.matdim[2]){
+        target_layer = gex.slot
+        cat("Found exact match layer with correct dimensions:", target_layer, "\n")
+      } else {
+        cat("Layer", gex.slot, "exists but has wrong dimensions:", paste(test_dims, collapse=" x "), "\n")
+      }
+    }
+    
+    # Second try: find layer with correct cell count
+    if(is.null(target_layer)){
+      cat("Searching for layer with", gex.matdim[2], "cells...\n")
+      for(ln in layer_names){
+        layer_dims = tryCatch({
+          dim(obj@assays[[gex.assay]]@layers[[ln]])
+        }, error = function(e) next)
+        
+        if(!is.null(layer_dims) && layer_dims[2] == gex.matdim[2]){
+          target_layer = ln
+          cat("Found layer with correct cell count:", target_layer, "\n")
+          break
         }
       }
-      obj@assays[[gex.assay]]@layers[[layer_name]]
+    }
+    
+    # Third try: use LayerData but verify
+    if(is.null(target_layer)){
+      cat("Trying LayerData() as fallback...\n")
+      test_data = tryCatch({
+        LayerData(obj, assay = gex.assay, layer = gex.slot)
+      }, error = function(e) NULL)
+      
+      if(!is.null(test_data) && ncol(test_data) == gex.matdim[2]){
+        target_layer = gex.slot
+        cat("LayerData() returned correct dimensions\n")
+      }
+    }
+    
+    if(is.null(target_layer)){
+      stop(paste("Cannot find a layer with", gex.matdim[2], "cells. Available layers:",
+                 paste(layer_names, collapse=", ")))
+    }
+    
+    # Now retrieve the data from the correct layer
+    cat("Retrieving data from layer:", target_layer, "\n")
+    gex.data = tryCatch({
+      if(target_layer %in% layer_names){
+        obj@assays[[gex.assay]]@layers[[target_layer]]
+      } else {
+        LayerData(obj, assay = gex.assay, layer = target_layer)
+      }
+    }, error = function(e) {
+      stop(paste("Failed to retrieve layer", target_layer, ":", e$message))
     })
     
     cat("Successfully retrieved data, dimensions:", dim(gex.data), "\n")
@@ -193,9 +244,10 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # Verify gex.data dimensions match expectations
     if(!all(dim(gex.data) == gex.matdim)){
-      warning("Data dimensions don't match expected dimensions")
-      cat("Adjusting matrix dimensions to match actual data\n")
-      gex.matdim = dim(gex.data)
+      cat("ERROR: Data dimensions still don't match!\n")
+      cat("Actual:", dim(gex.data), "\n")
+      cat("Expected:", gex.matdim, "\n")
+      stop("Dimension mismatch even after finding correct layer")
     }
     
     # Ensure cell order matches and all cells exist
