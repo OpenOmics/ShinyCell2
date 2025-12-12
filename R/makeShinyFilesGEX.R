@@ -173,6 +173,20 @@ makeShinyFilesGEX <- function(
       tmpG = makeH5fromAnndata(obj, sc1meta, filename = filename, 
                                gex.assay = iAssay, chunkSize = chunkSize)
     }
+    
+    # ADDED: Debug the return value
+    cat("\n=== Processing genes for assay:", iAssay, "===\n")
+    cat("tmpG class:", class(tmpG), "\n")
+    cat("tmpG length:", length(tmpG), "\n")
+    cat("First few tmpG values:", head(tmpG, 10), "\n")
+    cat("Is tmpG a vector?", is.vector(tmpG), "\n")
+    cat("Is tmpG NULL?", is.null(tmpG), "\n")
+    
+    # ADDED: Handle NULL or non-vector return
+    if(is.null(tmpG) || !is.vector(tmpG) || length(tmpG) == 0){
+      stop(paste("makeH5fromSeurat returned invalid gene names for assay", iAssay))
+    }
+    
     tmpOut = seq_along(tmpG); names(tmpOut) = tmpG
     tmpOut = tmpOut[order(names(tmpOut))]
     tmpOut = tmpOut[order(nchar(names(tmpOut)))]

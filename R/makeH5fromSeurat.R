@@ -277,9 +277,18 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
         gex.data[((i-1)*chk+1):(i*chk), sc1meta.filtered$cellID])
     }
-      sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
-        gex.data[(i*chk+1):gex.matdim[1], sc1meta.filtered$cellID])
-      gex.rownm = rownames(gex.data)
+    sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
+      gex.data[(i*chk+1):gex.matdim[1], sc1meta.filtered$cellID])
+    
+    # CRITICAL: Get gene names from the matrix
+    gex.rownm = rownames(gex.data)
+    
+    # ADDED: Verify gene names exist
+    if(is.null(gex.rownm) || length(gex.rownm) == 0){
+      cat("WARNING: No row names in gex.data, trying to get from assay\n")
+      gex.rownm = rownames(obj@assays[[gex.assay]])
+    }
+    cat("Number of genes:", length(gex.rownm), "\n")
       
   } else {
     for(i in 1:nChunk){
@@ -293,5 +302,11 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       gex.rownm = rownames(slot(obj@assays[[gex.assay]], gex.slot))
   }
   sc1gexpr$close_all()
+
+  # ADDED: Verify return value
+  cat("Returning gene names, length:", length(gex.rownm), "\n")
+  cat("First few gene names:", head(gex.rownm, 10), "\n")
+  cat("Class of return value:", class(gex.rownm), "\n")
+
   return(gex.rownm)
 }
