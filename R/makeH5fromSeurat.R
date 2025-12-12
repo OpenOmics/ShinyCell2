@@ -28,6 +28,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
   cat("First few cellIDs in sc1meta:", head(sc1meta$cellID, 10), "\n")
   
   # Create h5 file and get ready
+  
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     cat("Assay type: Assay5 (Seurat v5)\n")
     cat("Available layers in assay:", names(obj@assays[[gex.assay]]@layers), "\n")
@@ -161,15 +162,16 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     chk = floor(chk / 2)
   } 
   
-  # Start writing to file
+   Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
-    # Use LayerData to properly access Assay5 data
-    # Try LayerData first (Seurat v5), fall back to layer access if that fails
+    # For Assay5, use LayerData which handles layer name mapping
+    cat("Attempting to retrieve layer:", gex.slot, "\n")
     gex.data = tryCatch({
       LayerData(obj, assay = gex.assay, layer = gex.slot)
     }, error = function(e) {
-      cat("LayerData failed, trying direct layer access:", e$message, "\n")
+      cat("LayerData failed:", e$message, "\n")
+      cat("Trying direct layer access...\n")
       # Try direct layer access
       layer_name = gex.slot
       if(!layer_name %in% names(obj@assays[[gex.assay]]@layers)){
@@ -178,10 +180,35 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
         if(length(matching_layers) > 0){
           cat("Using layer:", matching_layers[1], "\n")
           layer_name = matching_layers[1]
+        } else {
+          stop(paste("Cannot find layer matching", gex.slot, "in available layers:", 
+                     paste(names(obj@assays[[gex.assay]]@layers), collapse=", ")))
         }
       }
       obj@assays[[gex.assay]]@layers[[layer_name]]
     })
+    
+    cat("Successfully retrieved data, dimensions:", dim(gex.data), "\n")
+    cat("Expected dimensions:", gex.matdim, "\n")
+    
+    # Verify gex.data dimensions match expectations
+    if(!all(dim(gex.data) == gex.matdim)){
+      warning("Data dimensions don't match expected dimensions")
+      cat("Adjusting matrix dimensions to match actual data\n")
+      gex.matdim = dim(gex.data)
+    }
+    
+    # Ensure cell order matches and all cells exist
+    if(!all(sc1meta.filtered$cellID %in% colnames(gex.data))){
+      missing_in_data = sum(!sc1meta.filtered$cellID %in% colnames(gex.data))
+      cat("ERROR:", missing_in_data, "cells in metadata not found in data matrix\n")
+      cat("Sample missing cells:", head(sc1meta.filtered$cellID[!sc1meta.filtered$cellID %in% colnames(gex.data)], 10), "\n")
+      stop("Cell ID mismatch between metadata and data matrix")
+    }
+    
+    # Recalculate nChunk based on actual dimensions
+    nChunk = floor((gex.matdim[1]-8)/chk)
+    cat("Writing data in", nChunk, "chunks of size", chk, "\n")
     
     for(i in 1:nChunk){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
