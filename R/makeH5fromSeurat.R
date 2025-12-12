@@ -162,7 +162,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     chk = floor(chk / 2)
   } 
   
-   Start writing to file
+  # Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     # For Assay5, use LayerData which handles layer name mapping
