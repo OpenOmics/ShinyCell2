@@ -242,6 +242,17 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     cat("Successfully retrieved data, dimensions:", dim(gex.data), "\n")
     cat("Expected dimensions:", gex.matdim, "\n")
     
+    # CRITICAL FIX: Ensure the matrix has cell names
+    if(is.null(colnames(gex.data))){
+      cat("WARNING: Retrieved matrix has no column names, assigning from assay.cells\n")
+      colnames(gex.data) = assay.cells
+      cat("Assigned", length(assay.cells), "cell names to matrix\n")
+    }
+    
+    # Verify we now have column names
+    cat("First few colnames of gex.data:", head(colnames(gex.data), 10), "\n")
+    cat("Number of colnames:", length(colnames(gex.data)), "\n")
+    
     # Verify gex.data dimensions match expectations
     if(!all(dim(gex.data) == gex.matdim)){
       cat("ERROR: Data dimensions still don't match!\n")
