@@ -113,14 +113,19 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
   readr::write_file(wrUIlib(), file = fname)
   for(i in shiny.prefix){
     readr::write_file(wrUIload(i), file = fname, append = TRUE)
+    if(file.exists(paste0(shiny.dir, "/", i, "image.rds"))){
+      readr::write_file(wrUIloadS1(i), file = fname, append = TRUE)}
     if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))){ 
       readr::write_file(wrUIloadT1(i), file = fname, append = TRUE)}
   }
   readr::write_file(wrUIpre(shiny.title, ganalytics), file = fname, append = TRUE)
   if(length(shiny.prefix) == 1){
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))){
-      readr::write_file(wrUImainS1(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)
-      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)}
+      # Load image data to check if multi-slide
+      tmpImg <- readRDS(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))
+      hasMultiSlides <- !is.null(tmpImg$slide_names) && length(tmpImg$slide_names) > 1
+      readr::write_file(wrUImainS1(shiny.prefix, defPtSiz2[1], hasMultiSlides), file = fname, append = TRUE)
+      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1], hasMultiSlides), file = fname, append = TRUE)}
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "bw.rds"))){
       readr::write_file(wrUImainT1(shiny.prefix), file = fname, append = TRUE)}
     readr::write_file(wrUImainA1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
@@ -136,8 +141,11 @@ makeShinyCodes <- function(shiny.title, shiny.footnotes = "",
       hhh = shiny.headers[i]
       readr::write_file(glue::glue('navbarMenu("{hhh}",'), file = fname, append = TRUE)
       if(file.exists(paste0(shiny.dir, "/", shiny.prefix[i], "image.rds"))){
-        readr::write_file(wrUImainS1(shiny.prefix[i], defPtSiz2[i]), file = fname, append = TRUE)
-        readr::write_file(wrUImainS2(shiny.prefix[i], defPtSiz2[i]), file = fname, append = TRUE)}
+        # Load image data to check if multi-slide
+        tmpImg <- readRDS(paste0(shiny.dir, "/", shiny.prefix[i], "image.rds"))
+        hasMultiSlides <- !is.null(tmpImg$slide_names) && length(tmpImg$slide_names) > 1
+        readr::write_file(wrUImainS1(shiny.prefix[i], defPtSiz2[i], hasMultiSlides), file = fname, append = TRUE)
+        readr::write_file(wrUImainS2(shiny.prefix[i], defPtSiz2[i], hasMultiSlides), file = fname, append = TRUE)}
       if(file.exists(paste0(shiny.dir, "/", shiny.prefix[i], "bw.rds"))){ 
         readr::write_file(wrUImainT1(shiny.prefix[i]), file = fname, append = TRUE)}
       readr::write_file(wrUImainA1(shiny.prefix[i], defPtSiz[i]), file = fname, append = TRUE)
