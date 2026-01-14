@@ -17,52 +17,33 @@
 #'
 #' @export
 makeH5fromSeurat <- function(obj, sc1meta, filename, 
-                             gex.assay, gex.slot, chunkSize){
-  # DEBUG: Print input parameters
-  cat("=== DEBUG: makeH5fromSeurat parameters ===\n")
-  cat("gex.assay:", gex.assay, "\n")
-  cat("gex.slot:", gex.slot, "\n")
-  cat("filename:", filename, "\n")
-  cat("chunkSize:", chunkSize, "\n")
-  cat("Number of cells in sc1meta:", nrow(sc1meta), "\n")
-  cat("First few cellIDs in sc1meta:", head(sc1meta$cellID, 10), "\n")
-  
+                             gex.assay, gex.slot, chunkSize){  
   # Create h5 file and get ready
   
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     cat("Assay type: Assay5 (Seurat v5)\n")
     cat("Available layers in assay:", names(obj@assays[[gex.assay]]@layers), "\n")
     
-    # DEBUG: Try multiple methods to get cell names
-    cat("\n--- Attempting different methods to get cell names ---\n")
-    
     # Method 1: Cells() on assay
     assay.cells.method1 = tryCatch({
       Cells(obj@assays[[gex.assay]])
     }, error = function(e) {
-      cat("Method 1 (Cells on assay) failed:", e$message, "\n")
+      cat("")
       NULL
     })
-    cat("Method 1 result length:", length(assay.cells.method1), "\n")
-    
+
     # Method 2: Cells() on main object
     assay.cells.method2 = tryCatch({
       Cells(obj)
     }, error = function(e) {
-      cat("Method 2 (Cells on object) failed:", e$message, "\n")
+      cat("")
       NULL
     })
-    cat("Method 2 result length:", length(assay.cells.method2), "\n")
-    cat("First few cells (method 2):", head(assay.cells.method2, 10), "\n")
     
     # Method 3: colnames on main object
     assay.cells.method3 = tryCatch({
       colnames(obj)
-    }, error = function(e) {
-      cat("Method 3 (colnames on object) failed:", e$message, "\n")
-      NULL
     })
-    cat("Method 3 result length:", length(assay.cells.method3), "\n")
     
     # Method 4: Direct layer access
     assay.cells.method4 = tryCatch({
@@ -71,11 +52,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       } else {
         NULL
       }
-    }, error = function(e) {
-      cat("Method 4 (layer colnames) failed:", e$message, "\n")
-      NULL
     })
-    cat("Method 4 result length:", length(assay.cells.method4), "\n")
     
     # Use the first method that returns non-NULL cells
     assay.cells = NULL
@@ -97,26 +74,20 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # Get matrix dimension from the assay itself
     gex.matdim = c(nrow(obj@assays[[gex.assay]]), length(assay.cells))
-    cat("Matrix dimensions:", gex.matdim, "\n")
   }else{
     cat("Assay type: Legacy Assay (Seurat v3/v4)\n")
     cat("Available slots in assay:", slotNames(obj@assays[[gex.assay]]), "\n")
     gex.matdim = dim(slot(obj@assays[[gex.assay]], gex.slot))
-    cat("Matrix dimensions:", gex.matdim, "\n")
     # Get available cells in this assay
     assay.cells = colnames(slot(obj@assays[[gex.assay]], gex.slot))
   }
   
-  cat("Number of cells in assay:", length(assay.cells), "\n")
-  cat("First few cellIDs in assay:", head(assay.cells, 10), "\n")
-  
   # Filter sc1meta to only include cells present in this assay
   sc1meta.filtered = sc1meta[sc1meta$cellID %in% assay.cells, ]
-  cat("Number of cells after filtering:", nrow(sc1meta.filtered), "\n")
   
   # Check overlap
   overlap_count = sum(sc1meta$cellID %in% assay.cells)
-  cat("Overlap between sc1meta and assay:", overlap_count, "\n")
+  # cat("Overlap between sc1meta and assay:", overlap_count, "\n")
   
   # ADDED: Verify all cellIDs in filtered metadata exist in assay
   missing_cells = setdiff(sc1meta.filtered$cellID, assay.cells)
@@ -133,9 +104,6 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     cat("Sample cellIDs from assay:", head(unique(assay.cells), 20), "\n")
     stop("No overlapping cells found between metadata and assay data")
   }
-  
-  cat("Final number of cells to process:", nrow(sc1meta.filtered), "\n")
-  cat("==========================================\n")
   
   # CRITICAL CHECK: Ensure we have cells to process
   if(nrow(sc1meta.filtered) == 0){
@@ -165,12 +133,8 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
 # Start writing to file
   nChunk = floor((gex.matdim[1]-8)/chk)
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
-    # For Assay5, we need to carefully retrieve the correct layer
-    cat("Attempting to retrieve layer:", gex.slot, "\n")
-    
     # First, check what layers exist and their dimensions
     layer_names = names(obj@assays[[gex.assay]]@layers)
-    cat("Available layers and their dimensions:\n")
     for(ln in layer_names){
       layer_dims = tryCatch({
         dim(obj@assays[[gex.assay]]@layers[[ln]])
@@ -187,15 +151,14 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       test_dims = dim(obj@assays[[gex.assay]]@layers[[gex.slot]])
       if(test_dims[2] == gex.matdim[2]){
         target_layer = gex.slot
-        cat("Found exact match layer with correct dimensions:", target_layer, "\n")
+        # cat("Found exact match layer with correct dimensions:", target_layer, "\n")
       } else {
-        cat("Layer", gex.slot, "exists but has wrong dimensions:", paste(test_dims, collapse=" x "), "\n")
+        # cat("Layer", gex.slot, "exists but has wrong dimensions:", paste(test_dims, collapse=" x "), "\n")
       }
     }
     
     # Second try: find layer with correct cell count
     if(is.null(target_layer)){
-      cat("Searching for layer with", gex.matdim[2], "cells...\n")
       for(ln in layer_names){
         layer_dims = tryCatch({
           dim(obj@assays[[gex.assay]]@layers[[ln]])
@@ -203,7 +166,6 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
         
         if(!is.null(layer_dims) && layer_dims[2] == gex.matdim[2]){
           target_layer = ln
-          cat("Found layer with correct cell count:", target_layer, "\n")
           break
         }
       }
@@ -211,14 +173,12 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # Third try: use LayerData but verify
     if(is.null(target_layer)){
-      cat("Trying LayerData() as fallback...\n")
       test_data = tryCatch({
         LayerData(obj, assay = gex.assay, layer = gex.slot)
       }, error = function(e) NULL)
       
       if(!is.null(test_data) && ncol(test_data) == gex.matdim[2]){
         target_layer = gex.slot
-        cat("LayerData() returned correct dimensions\n")
       }
     }
     
@@ -228,7 +188,6 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     }
     
     # Now retrieve the data from the correct layer
-    cat("Retrieving data from layer:", target_layer, "\n")
     gex.data = tryCatch({
       if(target_layer %in% layer_names){
         obj@assays[[gex.assay]]@layers[[target_layer]]
@@ -238,20 +197,14 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     }, error = function(e) {
       stop(paste("Failed to retrieve layer", target_layer, ":", e$message))
     })
-    
-    cat("Successfully retrieved data, dimensions:", dim(gex.data), "\n")
-    cat("Expected dimensions:", gex.matdim, "\n")
-    
+
     # CRITICAL FIX: Ensure the matrix has cell names
     if(is.null(colnames(gex.data))){
       cat("WARNING: Retrieved matrix has no column names, assigning from assay.cells\n")
       colnames(gex.data) = assay.cells
       cat("Assigned", length(assay.cells), "cell names to matrix\n")
     }
-    
-    # Verify we now have column names
-    cat("First few colnames of gex.data:", head(colnames(gex.data), 10), "\n")
-    cat("Number of colnames:", length(colnames(gex.data)), "\n")
+
     
     # Verify gex.data dimensions match expectations
     if(!all(dim(gex.data) == gex.matdim)){
@@ -271,7 +224,6 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # Recalculate nChunk based on actual dimensions
     nChunk = floor((gex.matdim[1]-8)/chk)
-    cat("Writing data in", nChunk, "chunks of size", chk, "\n")
     
     for(i in 1:nChunk){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
@@ -285,10 +237,8 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # ADDED: Verify gene names exist
     if(is.null(gex.rownm) || length(gex.rownm) == 0){
-      cat("WARNING: No row names in gex.data, trying to get from assay\n")
       gex.rownm = rownames(obj@assays[[gex.assay]])
     }
-    cat("Number of genes:", length(gex.rownm), "\n")
       
   } else {
     for(i in 1:nChunk){
@@ -302,11 +252,6 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       gex.rownm = rownames(slot(obj@assays[[gex.assay]], gex.slot))
   }
   sc1gexpr$close_all()
-
-  # ADDED: Verify return value
-  cat("Returning gene names, length:", length(gex.rownm), "\n")
-  cat("First few gene names:", head(gex.rownm, 10), "\n")
-  cat("Class of return value:", class(gex.rownm), "\n")
 
   return(gex.rownm)
 }
