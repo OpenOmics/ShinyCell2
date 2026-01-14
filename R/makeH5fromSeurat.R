@@ -18,8 +18,8 @@
 #' @export
 makeH5fromSeurat <- function(obj, sc1meta, filename, 
                              gex.assay, gex.slot, chunkSize){  
-  # Create h5 file and get ready
   
+  # Create h5 file and get ready
   if(class(obj@assays[[gex.assay]]) == "Assay5"){
     cat("Assay type: Assay5 (Seurat v5)\n")
     cat("Available layers in assay:", names(obj@assays[[gex.assay]]@layers), "\n")
@@ -52,7 +52,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       } else {
         NULL
       }
-    })
+    })∏
     
     # Use the first method that returns non-NULL cells
     assay.cells = NULL
@@ -74,7 +74,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
     
     # Get matrix dimension from the assay itself
     gex.matdim = c(nrow(obj@assays[[gex.assay]]), length(assay.cells))
-  }else{
+  } else {
     cat("Assay type: Legacy Assay (Seurat v3/v4)\n")
     cat("Available slots in assay:", slotNames(obj@assays[[gex.assay]]), "\n")
     gex.matdim = dim(slot(obj@assays[[gex.assay]], gex.slot))
