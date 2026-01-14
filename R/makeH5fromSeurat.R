@@ -52,7 +52,7 @@ makeH5fromSeurat <- function(obj, sc1meta, filename,
       } else {
         NULL
       }
-    })∏
+    })
     
     # Use the first method that returns non-NULL cells
     assay.cells = NULL
