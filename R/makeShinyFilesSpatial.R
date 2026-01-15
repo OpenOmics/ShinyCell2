@@ -30,35 +30,107 @@ makeShinyFilesSpatial <- function(
   sc1image = list()
   if(class(obj)[1] == "Seurat"){
     if(.hasSlot(obj, "images")){
-      # coordinates - handle both VisiumV1 and VisiumV2 formats
-      visium_image <- obj@images[[1]]
-      if ("VisiumV2" %in% class(visium_image)) {
-        # New VisiumV2 format - coordinates are in boundaries$centroids
-        coords <- visium_image@boundaries$centroids@coords
-        # Convert to expected format with imagecol and imagerow columns
-        sc1image$coord <- data.frame(
-          tissue = 1,  # Default tissue value
-          row = NA,    # Not available in VisiumV2
-          col = NA,    # Not available in VisiumV2  
-          imagecol = coords[, "x"],
-          imagerow = coords[, "y"]
-        )
-        rownames(sc1image$coord) <- rownames(coords)
-      } else {
-        # Traditional VisiumV1 format
-        sc1image$coord <- visium_image@coordinates
+      # Get all available slide names
+      slide_names <- names(obj@images)
+      cat("Found", length(slide_names), "spatial slide(s):", paste(head(slide_names, 5), collapse=", "), 
+          ifelse(length(slide_names) > 5, "...", ""), "\n")
+      
+      sc1image$slide_names <- slide_names
+      
+      # Initialize lists to store data for all slides
+      sc1image$coords <- list()
+      sc1image$bg_images <- list()
+      sc1image$bg_images_hires <- list()
+      sc1image$lowres_factors <- list()
+      sc1image$hires_factors <- list()
+      sc1image$image_types <- list()
+      
+      # Loop through all slides and extract data
+      for(i in seq_along(slide_names)) {
+        slide_name <- slide_names[i]
+        cat("  Processing slide", i, "of", length(slide_names), ":", slide_name, "\n")
+        
+        visium_image <- obj@images[[slide_name]]
+        
+        # Extract coordinates - handle both VisiumV1 and VisiumV2 formats
+        if ("VisiumV2" %in% class(visium_image)) {
+          # VisiumV2 format
+          coords <- visium_image@boundaries$centroids@coords
+          sc1image$coords[[slide_name]] <- data.frame(
+            tissue = 1,
+            row = NA,
+            col = NA,
+            imagecol = coords[, "x"],
+            imagerow = coords[, "y"]
+          )
+          rownames(sc1image$coords[[slide_name]]) <- rownames(coords)
+          sc1image$image_types[[slide_name]] <- "VisiumV2"
+        } else {
+          # VisiumV1 format
+          sc1image$coords[[slide_name]] <- visium_image@coordinates
+          sc1image$image_types[[slide_name]] <- "VisiumV1"
+        }
+        
+        # Extract lowres background image
+        tryCatch({
+          bg_image <- GetImage(obj, image = slide_name, mode = "raster")
+          sc1image$bg_images[[slide_name]] <- bg_image
+        }, error = function(e) {
+          cat("    Warning: Could not extract lowres image for", slide_name, "- using blank raster\n")
+          sc1image$bg_images[[slide_name]] <<- matrix("white", nrow = 100, ncol = 100)
+          class(sc1image$bg_images[[slide_name]]) <<- "raster"
+        })
+        
+        # Extract high-res background image for zooming
+        tryCatch({
+          if("VisiumV2" %in% class(visium_image)) {
+            # For VisiumV2, check if hires image exists in the object
+            hires_img <- visium_image@image@image
+            if(!is.null(hires_img) && length(dim(hires_img)) >= 2) {
+              sc1image$bg_images_hires[[slide_name]] <- hires_img
+              # Calculate hires scaling factor
+              lowres_img <- sc1image$bg_images[[slide_name]]
+              hires_scale <- dim(hires_img)[2] / dim(lowres_img)[2]
+              sc1image$hires_factors[[slide_name]] <- hires_scale
+              cat("    Extracted hires image (scale factor:", round(hires_scale, 2), ")\n")
+            } else {
+              # Fallback to lowres
+              sc1image$bg_images_hires[[slide_name]] <- sc1image$bg_images[[slide_name]]
+              sc1image$hires_factors[[slide_name]] <- 1.0
+            }
+          } else {
+            # For VisiumV1, try to access hires if available
+            if(!is.null(visium_image@image) && "hires" %in% names(visium_image@image)) {
+              sc1image$bg_images_hires[[slide_name]] <- visium_image@image$hires
+              # Calculate scaling from lowres to hires
+              hires_scale <- dim(visium_image@image$hires)[2] / dim(sc1image$bg_images[[slide_name]])[2]
+              sc1image$hires_factors[[slide_name]] <- hires_scale
+              cat("    Extracted hires image (scale factor:", round(hires_scale, 2), ")\n")
+            } else {
+              # Fallback to lowres
+              sc1image$bg_images_hires[[slide_name]] <- sc1image$bg_images[[slide_name]]
+              sc1image$hires_factors[[slide_name]] <- 1.0
+            }
+          }
+        }, error = function(e) {
+          cat("    Warning: Could not extract hires image for", slide_name, "- using lowres\n")
+          sc1image$bg_images_hires[[slide_name]] <<- sc1image$bg_images[[slide_name]]
+          sc1image$hires_factors[[slide_name]] <<- 1.0
+        })
+        
+        # Store lowres factor
+        sc1image$lowres_factors[[slide_name]] <- visium_image@scale.factors$lowres
       }
       
-      # uncropped background image
-      bg_image <- GetImage(obj, mode = "raster") # background image
-      # bg_grob <- rasterGrob(bg_image, width=unit(1,"npc"), height=unit(1,"npc"), 
-      #                       interpolate = FALSE) # background image grob
-      sc1image$bg_image <- bg_image
-      # sc1image$bg_grob  <- bg_grob
+      cat("  Extracted data for", length(slide_names), "slides\n")
       
-      # for cropped image generation in the server.R script
-      sc1image$lowres   <- visium_image@scale.factors$lowres
-
+      # Set defaults for backwards compatibility
+      sc1image$coord <- sc1image$coords[[slide_names[1]]]
+      sc1image$bg_image <- sc1image$bg_images[[slide_names[1]]]
+      sc1image$bg_image_hires <- sc1image$bg_images_hires[[slide_names[1]]]
+      sc1image$lowres <- sc1image$lowres_factors[[slide_names[1]]]
+      sc1image$hires_factor <- sc1image$hires_factors[[slide_names[1]]]
+      sc1image$image_type <- sc1image$image_types[[slide_names[1]]]
     }
   } else {
     stop("Only Seurat objects are accepted!")
@@ -67,5 +139,4 @@ makeShinyFilesSpatial <- function(
   ### Saving objects
   saveRDS(sc1image, file = paste0(shiny.dir, "/", shiny.prefix, "image.rds"))
 }
-
 
