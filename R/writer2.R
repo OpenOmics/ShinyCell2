@@ -44,6 +44,18 @@ wrUIloadT1 <- function(prefix) {
 
 #' Write code for ui.R
 #'
+#' @rdname wrUIloadS1
+#' @export wrUIloadS1
+#'
+wrUIloadS1 <- function(prefix) {
+  glue::glue(
+    '{prefix}image = readRDS("./{prefix}image.rds")\n',
+    '\n'
+  )
+}
+
+#' Write code for ui.R
+#'
 #' @rdname wrUIpre
 #' @export wrUIpre
 #'
@@ -1069,7 +1081,33 @@ wrUImainB3 <- function(prefix) {
 #' @rdname wrUImainS1
 #' @export wrUImainS1
 #'
-wrUImainS1 <- function(prefix, ptsiz) {
+wrUImainS1 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
+  # Calculate dynamic slider parameters based on cell count
+  # Read metadata to get cell count
+  meta_file <- paste0(prefix, "meta.rds")
+  if (file.exists(meta_file)) {
+    meta <- readRDS(meta_file)
+    n_cells <- nrow(meta)
+  } else {
+    n_cells <- 10000  # Default fallback
+  }
+  
+  # Use heuristic: >20k cells = fine control, <20k = broad control
+  if (n_cells > 20000) {
+    # Fine control for large datasets
+    slider_min <- 0.1
+    slider_max <- 2
+    slider_step <- 0.05
+  } else {
+    # Broad control for smaller datasets
+    slider_min <- 0.25
+    slider_max <- 2
+    slider_step <- 0.25
+  }
+  
+  # Ensure ptsiz is within valid range
+  ptsiz_val <- max(slider_min, min(as.numeric(ptsiz), slider_max))
+  
   glue::glue(
     '  ### Tab1.s1: Zoom-enable spatial \n',
     '  tabPanel( \n',
@@ -1083,7 +1121,7 @@ wrUImainS1 <- function(prefix, ptsiz) {
     '        3, fluidRow(\n',
     '          column(\n',
     '            12, sliderInput("{prefix}s1alp", "Dot transparency: ", \n',
-    '                            min = 0, max = 1, value = c(0.5,1), step = 0.05))\n',
+    '                            min = 0, max = 1, value = 1, step = 0.05))\n',
     '        ) \n',
     '      ), # End of column (6 space) \n',
     '      column( \n',
@@ -1105,7 +1143,7 @@ wrUImainS1 <- function(prefix, ptsiz) {
     '          fluidRow( \n',
     '            column( \n',
     '              6, sliderInput("{prefix}s1siz", "Point size:", \n',
-    '                             min = 0, max = 4, value = {ptsiz}, step = 0.25), \n',
+    '                             min = {slider_min}, max = {slider_max}, value = {ptsiz_val}, step = {slider_step}), \n',
     '              radioButtons("{prefix}s1psz", "Plot size:", \n',
     '                           choices = c("Small", "Medium", "Large"), \n',
     '                           selected = "Medium", inline = TRUE), \n',
@@ -1120,10 +1158,56 @@ wrUImainS1 <- function(prefix, ptsiz) {
     '    fluidRow( \n',
     '      column( \n',
     '        3, style="border-right: 2px solid black", h4("Information to plot"),\n',
-    '        selectInput("{prefix}s1ass1", "Data type to colour plot:",\n',
-    '                    choices = c("Cell Information", paste0("Assay: ", {prefix}def$assay)), \n',
-    '                    selected = "Cell Information"), \n',
-    '        selectInput("{prefix}s1inp1", "Cell Info / Feature Name:", choices = NULL) %>% \n',
+    if(hasMultiSlides) {
+      glue::glue(
+        '        selectInput("{prefix}s1slide", "Select Slide:",\n',
+        '                    choices = {prefix}image$slide_names,\n',
+        '                    selected = {prefix}image$slide_names[1]),\n',
+        '        br(),\n'
+      )
+    } else {
+      ''
+    },
+    '        # Offset controls (d-pad style)\n',
+    '        fluidRow(\n',
+    '          column(12, tags$div(style = "margin-top: 10px; margin-bottom: 5px;", strong("Spot offset (pixels):")),\n',
+    '                 tags$div(style = "text-align: center; margin-bottom: 5px;",\n',
+    '                   actionButton("{prefix}s1offsetUp", "", icon = icon("arrow-up"), \n',
+    '                                class = "btn btn-sm btn-default", \n',
+    '                                style = "width: 40px; height: 40px;")\n',
+    '                 ),\n',
+    '                 tags$div(style = "text-align: center;",\n',
+    '                   actionButton("{prefix}s1offsetLeft", "", icon = icon("arrow-left"), \n',
+    '                                class = "btn btn-sm btn-default", \n',
+    '                                style = "width: 40px; height: 40px; margin-right: 10px;"),\n',
+    '                   actionButton("{prefix}s1offsetDown", "", icon = icon("arrow-down"), \n',
+    '                                class = "btn btn-sm btn-default", \n',
+    '                                style = "width: 40px; height: 40px; margin-right: 10px;"),\n',
+    '                   actionButton("{prefix}s1offsetRight", "", icon = icon("arrow-right"), \n',
+    '                                class = "btn btn-sm btn-default", \n',
+    '                                style = "width: 40px; height: 40px;")\n',
+    '                 ),\n',
+    '                 tags$div(style = "text-align: center; margin-top: 5px; font-size: 12px;",\n',
+    '                   textOutput("{prefix}s1offsetDisplay")\n',
+    '                 )\n',
+    '          )\n',
+    '        ),\n',
+    '        # Spatial transformation controls\n',
+    '        fluidRow(\n',
+    '          column(12, strong("Spatial transformations:"))\n',
+    '        ),\n',
+    '        fluidRow(\n',
+    '          column(6, actionButton("{prefix}s1rotCW", "Rotate CW", class = "btn btn-sm btn-default", style = "width: 100%;")),\n',
+    '          column(6, actionButton("{prefix}s1rotCCW", "Rotate CCW", class = "btn btn-sm btn-default", style = "width: 100%"))\n',
+    '        ),\n',
+    '        fluidRow(\n',
+    '          column(6, actionButton("{prefix}s1flipH", "Flip Horizontal", class = "btn btn-sm btn-default", style = "width: 100%;")),\n',
+    '          column(6, actionButton("{prefix}s1flipV", "Flip Vertical", class = "btn btn-sm btn-default", style = "width: 100%"))\n',
+    '        ),\n',
+    '        fluidRow(\n',
+    '          column(12, actionButton("{prefix}s1reset", "Reset Transform", class = "btn btn-sm btn-warning", style = "width: 100%"))\n',
+    '        ),\n',
+    '        selectInput("{prefix}s1inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
     '          helper(type = "inline", size = "m", fade = TRUE,\n',
     '                 title = "Cell Info / Gene to colour cells by",\n',
     '                 content = c("Select cell info / feature to colour cells",\n',
@@ -1131,9 +1215,10 @@ wrUImainS1 <- function(prefix, ptsiz) {
     '                             paste0("- Continuous covariates / gene expression are coloured ",\n',
     '                                    "in a Blue-Yellow-Red colour scheme, which can be ",\n',
     '                                    "changed in the plot controls"))),\n',
-    '        strong("Draw box on plot below to zoom: "), \n',
+    '        strong("Draw box on plot below to zoom (double-click to reset zoom): "), \n',
     '        plotOutput("{prefix}s1oup1.br", height = "400px",\n',
-    '                   brush = brushOpts(id = "{prefix}s1inp1.br", resetOnNew = TRUE)), \n',
+    '                   brush = brushOpts(id = "{prefix}s1inp1.br", resetOnNew = TRUE),\n',
+    '                   dblclick = "{prefix}s1inp1.br_dblclick"), \n',
     '        actionButton("{prefix}s1tog1", "Toggle plot controls"), \n',
     '        conditionalPanel(\n',
     '          condition = "input.{prefix}s1tog1 % 2 == 1",\n',
@@ -1185,7 +1270,33 @@ wrUImainS1 <- function(prefix, ptsiz) {
 #' @rdname wrUImainS2
 #' @export wrUImainS2
 #'
-wrUImainS2 <- function(prefix, ptsiz) {
+wrUImainS2 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
+  # Calculate dynamic slider parameters based on cell count
+  # Read metadata to get cell count
+  meta_file <- paste0(prefix, "meta.rds")
+  if (file.exists(meta_file)) {
+    meta <- readRDS(meta_file)
+    n_cells <- nrow(meta)
+  } else {
+    n_cells <- 10000  # Default fallback
+  }
+  
+  # Use heuristic: >20k cells = fine control, <20k = broad control
+  if (n_cells > 20000) {
+    # Fine control for large datasets
+    slider_min <- 0.1
+    slider_max <- 2
+    slider_step <- 0.05
+  } else {
+    # Broad control for smaller datasets
+    slider_min <- 0.25
+    slider_max <- 2
+    slider_step <- 0.25
+  }
+  
+  # Ensure ptsiz is within valid range
+  ptsiz_val <- max(slider_min, min(as.numeric(ptsiz), slider_max))
+  
   glue::glue(
     '  ### Tab1.s2: CellInfo vs AssayExpr on spatial \n',
     '  tabPanel( \n',
@@ -1199,7 +1310,7 @@ wrUImainS2 <- function(prefix, ptsiz) {
     '        3, fluidRow(\n',
     '          column(\n',
     '            12, sliderInput("{prefix}s2alp", "Dot transparency: ", \n',
-    '                            min = 0, max = 1, value = c(0.5,1), step = 0.05)) \n',
+    '                            min = 0, max = 1, value = 1, step = 0.05)) \n',
     '        ) \n',
     '      ), # End of column (6 space) \n',
     '      column( \n',
@@ -1221,7 +1332,7 @@ wrUImainS2 <- function(prefix, ptsiz) {
     '          fluidRow( \n',
     '            column( \n',
     '              6, sliderInput("{prefix}s2siz", "Point size:", \n',
-    '                             min = 0, max = 5, value = {ptsiz}, step = 0.25), \n',
+    '                             min = {slider_min}, max = {slider_max}, value = {ptsiz_val}, step = {slider_step}), \n',
     '              radioButtons("{prefix}s2psz", "Plot size:", \n',
     '                           choices = c("Small", "Medium", "Large"), \n',
     '                           selected = "Medium", inline = TRUE), \n',
@@ -1236,17 +1347,52 @@ wrUImainS2 <- function(prefix, ptsiz) {
     '    fluidRow( \n',
     '      column(\n',
     '        6, style="border-right: 2px solid black",\n',
+    if(hasMultiSlides) {
+      glue::glue(
+        '        selectInput("{prefix}s2slide", "Select Slide:",\n',
+        '                    choices = {prefix}image$slide_names,\n',
+        '                    selected = {prefix}image$slide_names[1]),\n',
+        '        fluidRow(\n',
+        '          column(12, style = "margin-top: 10px; margin-bottom: 10px; border-top: 1px solid #ddd; padding-top: 10px;",\n',
+        '            h5("Spatial Transformations", style = "margin-bottom: 5px;"),\n',
+        '            div(style = "display: inline-block; margin-right: 5px;",\n',
+        '              actionButton("{prefix}s2rotCW", "↻ CW", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
+        '            div(style = "display: inline-block; margin-right: 5px;",\n',
+        '              actionButton("{prefix}s2rotCCW", "↺ CCW", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
+        '            div(style = "display: inline-block; margin-right: 5px;",\n',
+        '              actionButton("{prefix}s2flipH", "↔ H", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
+        '            div(style = "display: inline-block; margin-right: 5px;",\n',
+        '              actionButton("{prefix}s2flipV", "↕ V", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
+        '            div(style = "display: inline-block;",\n',
+        '              actionButton("{prefix}s2reset", "Reset", class = "btn-sm btn-warning", style = "padding: 2px 8px; font-size: 12px;")),\n',
+        '            div(style = "margin-top: 10px; margin-bottom: 5px;",\n',
+        '              strong("Offset:")),\n',
+        '            div(style = "text-align: center; margin-bottom: 3px;",\n',
+        '              actionButton("{prefix}s2offsetUp", "", icon = icon("arrow-up"), \n',
+        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px;")),\n',
+        '            div(style = "text-align: center;",\n',
+        '              actionButton("{prefix}s2offsetLeft", "", icon = icon("arrow-left"), \n',
+        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px; margin-right: 5px;"),\n',
+        '              actionButton("{prefix}s2offsetDown", "", icon = icon("arrow-down"), \n',
+        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px; margin-right: 5px;"),\n',
+        '              actionButton("{prefix}s2offsetRight", "", icon = icon("arrow-right"), \n',
+        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px;")),\n',
+        '            div(style = "text-align: center; margin-top: 3px; font-size: 10px;",\n',
+        '              textOutput("{prefix}s2offsetDisplay"))\n',
+        '          )\n',
+        '        ),\n'
+      )
+    } else {
+      ''
+    },
     '        fluidRow(\n',
     '          column(\n',
-    '            6, selectInput("{prefix}s2ass1", "Data type to colour plot:",\n',
-    '                           choices = c("Cell Information", paste0("Assay: ", {prefix}def$assay)), \n',
-    '                           selected = "Cell Information"), \n',
-    '            selectInput("{prefix}s2inp1", "Cell Info / Feature Name:", choices = NULL) %>% \n',
+    '            6, selectInput("{prefix}s2inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
     '              helper(type = "inline", size = "m", fade = TRUE,\n',
-    '                     title = "Cell Info / Gene to colour cells by",\n',
-    '                     content = c("Select cell info / feature to colour cells",\n',
+    '                     title = "Cell metadata to colour cells by",\n',
+    '                     content = c("Select cell metadata to colour cells",\n',
     '                                 "- Categorical covariates have a fixed colour palette",\n',
-    '                                 paste0("- Continuous covariates / gene expression are coloured ",\n',
+    '                                 paste0("- Continuous covariates are coloured ",\n',
     '                                        "in a Blue-Yellow-Red colour scheme, which can be ",\n',
     '                                        "changed in the plot controls")))\n',
     '          ),\n',
@@ -1287,15 +1433,12 @@ wrUImainS2 <- function(prefix, ptsiz) {
     '        6,\n',
     '        fluidRow( \n',
     '          column(\n',
-    '            6, selectInput("{prefix}s2ass2", "Data type to colour plot:",\n',
-    '                           choices = c("Cell Information", paste0("Assay: ", {prefix}def$assay)), \n',
-    '                           selected = paste0("Assay: ", {prefix}def$assay[1])), \n',
-    '            selectInput("{prefix}s2inp2", "Cell Info / Feature Name:", choices = NULL) %>% \n',
+    '            6, selectInput("{prefix}s2inp2", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta2) %>% \n',
     '              helper(type = "inline", size = "m", fade = TRUE,\n',
-    '                     title = "Cell Info / Gene to colour cells by",\n',
-    '                     content = c("Select cell info / feature to colour cells",\n',
+    '                     title = "Cell metadata to colour cells by",\n',
+    '                     content = c("Select cell metadata to colour cells",\n',
     '                                 "- Categorical covariates have a fixed colour palette",\n',
-    '                                 paste0("- Continuous covariates / gene expression are coloured ",\n',
+    '                                 paste0("- Continuous covariates are coloured ",\n',
     '                                        "in a Blue-Yellow-Red colour scheme, which can be ",\n',
     '                                        "changed in the plot controls")))\n',
     '          ),\n',
