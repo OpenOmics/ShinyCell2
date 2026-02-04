@@ -517,6 +517,94 @@ wrSVmainA2 <- function(prefix) {
 
 #' Write code for server.R
 #'
+#' @rdname wrSVmainD1
+#' @export wrSVmainD1
+#'
+
+wrSVmainD1 <- function(prefix) {
+  glue::glue(
+    '#########################\n',
+    '# d1 tab data table     #\n',
+    '#########################\n',
+    'output${prefix}d1.dt <- renderDataTable({{\n',
+    '  ggData <- scDRmarkerdt({prefix}conf, {prefix}meta, {prefix}def, paste0("./{prefix}deg.h5"),\n',
+    '                         input${prefix}d1degcluster, input${prefix}d1pval, input${prefix}d1pvaladj,\n',
+    '                         input${prefix}d1log2fc, input${prefix}d1diff, input${prefix}d1pctdiffmin,\n',
+    '                         input${prefix}d1pctdiffmax)\n',
+    '  dt <- datatable(ggData,\n',
+    '    rownames = FALSE,\n',
+    '    extensions = "Buttons",\n',
+    '    options = list(\n',
+    '      pageLength = -1,\n',
+    '      scrollX = TRUE,\n',
+    '      scrollY = 800,\n',
+    '      scroller = TRUE,\n',
+    '      dom = "Bfrtip",\n',
+    '      buttons = list(\n',
+    '        "copy", "csv", "excel",\n',
+    '        list(extend = "copy",text = "Copy Genes", exportOptions = list(columns = 1))\n',
+    '      ),\n',
+    '      columnDefs = list(list(className = "dt-center", targets = "_all"))\n',
+    '    )\n',
+    '  ) %>%\n',
+    '    formatRound(columns = c("avg_log2FC"), digits = 2)\n',
+    '  # Conditionally format pct.1, pct.2, and pctdiff if they exist\n',
+    '  cols_to_format <- c("pct.1", "pct.2")\n',
+    '  if ("pctdiff" %in% colnames(ggData)) {{\n',
+    '    cols_to_format <- c(cols_to_format, "pctdiff")\n',
+    '  }}\n',
+    '  dt <- dt %>% formatRound(columns = cols_to_format, digits = 4)\n',
+    '  dt\n',
+    '}})\n',
+    '#########################\n',
+    '# d1 tab plot           #\n',
+    '#########################\n',
+    '{prefix}d1oup1 <- reactive({{\n',
+    '  scDRmarkerplot(\n',
+    '    {prefix}conf,\n',
+    '    {prefix}meta,\n',
+    '    {prefix}dimr,\n',
+    '    {prefix}def,\n',
+    '    paste0("./{prefix}deg.h5"),\n',
+    '    input${prefix}d1degcluster,\n',
+    '    input${prefix}d1ass1,\n',
+    '    input${prefix}d1dr,\n',
+    '    input${prefix}d1deglab,\n',
+    '    input${prefix}d1siz,\n',
+    '    pList3[[input${prefix}d1psz]],\n',
+    '    sList[[input${prefix}d1fsz]],\n',
+    '    input${prefix}d1asp\n',
+    '  )\n',
+    '}})\n',
+    'output${prefix}d1oup1 <- renderPlot({{\n',
+    '  {prefix}d1oup1()\n',
+    '}})\n',
+    'output${prefix}d1oup1.ui <- renderUI({{\n',
+    '  plotOutput("{prefix}d1oup1", height = pList2[input${prefix}d1psz])\n',
+    '}})\n',
+    'output${prefix}d1oup1.dl <- downloadHandler(\n',
+    '  filename = function() {{\n',
+    '    paste0("{prefix}", input${prefix}d1dr, "_", input${prefix}d1ass1, "_", input${prefix}d1deglab, ".", input${prefix}d1oup1.f)\n',
+    '  }},\n',
+    '  content = function(file) {{\n',
+    '    ggsav(file, height = input${prefix}d1oup1.h, width = input${prefix}d1oup1.w, plot = {prefix}d1oup1())\n',
+    '  }}\n',
+    ')\n',
+    'output${prefix}d1sub1.ui <- renderUI({{\n',
+    '  sub <- strsplit({prefix}conf[UI == input${prefix}d1sub1]$fID, "\\\\|")[[1]]\n',
+    '  checkboxGroupInput("{prefix}d1sub2", "Select which cells to show",\n',
+    '    inline = TRUE,\n',
+    '    choices = sub, selected = sub\n',
+    '  )\n',
+    '}})\n',
+    '\n',
+    '\n',
+    '\n'
+  )
+}
+
+#' Write code for server.R
+#'
 #' @rdname wrSVmainA3
 #' @export wrSVmainA3
 #'
