@@ -103,11 +103,12 @@ makeShinyCodes <- function(
   for (i in shiny.prefix) {
     if (file.exists(paste0(shiny.dir, "/", i, "image.rds"))) {
       readr::write_file(wrSVmainS1(i), file = fname, append = TRUE)
-      readr::write_file(wrSVmainS2(i), file = fname, append = TRUE)}
-      if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))) { 
-        readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)}
-        readr::write_file(wrSVmainS2(i), file = fname, append = TRUE)
-      }
+      readr::write_file(wrSVmainS2(i), file = fname, append = TRUE)
+    }
+    if(file.exists(paste0(shiny.dir, "/", i, "bw.rds"))) { 
+      readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)
+      readr::write_file(wrSVmainS2(i), file = fname, append = TRUE)
+    }
     if (file.exists(paste0(shiny.dir, "/", i, "bw.rds"))) {
       readr::write_file(wrSVmainT1(i), file = fname, append = TRUE)
     }
@@ -138,11 +139,13 @@ makeShinyCodes <- function(
   }
   readr::write_file(wrUIpre(shiny.title, ganalytics), file = fname, append = TRUE)
   if(length(shiny.prefix) == 1){
-    if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))){
+    if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))) {
       readr::write_file(wrUImainS1(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)
-      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)}
+      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)
+    }
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "bw.rds"))){
-      readr::write_file(wrUImainT1(shiny.prefix), file = fname, append = TRUE)}
+      readr::write_file(wrUImainT1(shiny.prefix), file = fname, append = TRUE)
+    }
     readr::write_file(wrUImainA1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainS3(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainA2(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
