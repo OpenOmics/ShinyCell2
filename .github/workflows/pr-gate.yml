@@ -8,40 +8,41 @@ on:
 jobs:
   install-test:
     runs-on: ubuntu-latest
+    container:
+      image: rroutsong/shinycell2_builder:latest
+      options: --user root  # Run as root to avoid permission issues
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.5.0'
+      - name: Verify checkout and display file structure
+        run: |
+          echo "📂 Current working directory:"
+          pwd
+          echo ""
+          echo "📋 Repository files:"
+          ls -la
+          echo ""
+          echo "✅ DESCRIPTION file exists:"
+          if [ -f "DESCRIPTION" ]; then
+            cat DESCRIPTION | head -10
+          else
+            echo "❌ ERROR: DESCRIPTION file not found!"
+            exit 1
+          fi
       
       - name: Display R version
         run: Rscript -e "cat('R version:', R.version.string, '\n')"
       
-      - name: Install system dependencies
+      - name: Uninstall existing ShinyCell2
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libhdf5-dev
-
-      - name: Install pak package
+          Rscript -e "if ('ShinyCell2' %in% installed.packages()[,'Package']) { remove.packages('ShinyCell2'); cat('✅ Removed existing ShinyCell2\n') } else { cat('ℹ️  No existing ShinyCell2 to remove\n') }"
+      
+      - name: Install ShinyCell2 from PR branch
         run: |
-          Rscript -e "install.packages('pak')"
-          Rscript -e 'pak::pak(c("shiny", "shinyhelper", "Matrix", "DT", "magrittr", 
-           "ggplot2", "ggrepel", "hdf5r", "ggdendro", "ggpubr", 
-           "data.table", "Matrix", "reticulate", "R.utils", 
-           "gridExtra", "glue", "readr", "future", "RColorBrewer"))'
-
-      - name: Install ShinyCell2 package
-        run: |
-          # Rscript -e 'install.packages(".", repos = NULL, type = "source")'
-          pak::local_install(".")
+          echo "📦 Installing ShinyCell2 from: $(pwd)"
+          Rscript -e 'install.packages(".", repos = NULL, type = "source")'
           
       - name: Test package loading
         run: |
