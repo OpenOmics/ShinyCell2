@@ -52,13 +52,25 @@ jobs:
       - name: Display package version
         run: Rscript -e "cat('ShinyCell2 version:', as.character(packageVersion('ShinyCell2')), '\n')"
       
-      - name: Test basic functions
+      - name: Test core writer functions
         run: |
           Rscript -e "
           library(ShinyCell2)
-          # Test that writer functions exist
+          # Test that internal writer functions exist
           if (!exists('wrShFunc')) stop('wrShFunc function not found')
           if (!exists('wrSVmainA1')) stop('wrSVmainA1 function not found')
           if (!exists('wrSVmainD1')) stop('wrSVmainD1 function not found')
-          cat('✅ All basic functions exist\n')
+          cat('✅ All core writer functions exist\n')
+          "
+      
+      - name: Test user-facing API functions
+        run: |
+          Rscript -e "
+          library(ShinyCell2)
+          # Test that main user API functions exist
+          if (!exists('makeShinyFiles')) stop('makeShinyFiles function not found')
+          if (!exists('makeShinyCodes')) stop('makeShinyCodes function not found')
+          if (!exists('makeShinyFilesSpatial')) stop('makeShinyFilesSpatial function not found')
+          if (!exists('makeShinyFilesDEG')) stop('makeShinyFilesDEG function not found')
+          cat('✅ All user-facing API functions exist\n')
           "
