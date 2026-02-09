@@ -29,16 +29,20 @@ jobs:
             libssl-dev \
             libxml2-dev \
             libhdf5-dev
-      
-      - name: Install remotes package
-        run: Rscript -e "install.packages('remotes', repos='https://cloud.r-project.org')"
-      
-      - name: Install package dependencies
-        run: Rscript -e "remotes::install_deps(dependencies = TRUE, repos='https://cloud.r-project.org')"
-      
+
+      - name: Install pak package
+        run: |
+          Rscript -e "install.packages('pak')"
+          Rscript -e 'pak::pak(c("shiny", "shinyhelper", "Matrix", "DT", "magrittr", 
+           "ggplot2", "ggrepel", "hdf5r", "ggdendro", "ggpubr", 
+           "data.table", "Matrix", "reticulate", "R.utils", 
+           "gridExtra", "glue", "readr", "future", "RColorBrewer"))'
+
       - name: Install ShinyCell2 package
-        run: Rscript -e "remotes::install_local('.', force = TRUE)"
-      
+        run: |
+          # Rscript -e 'install.packages(".", repos = NULL, type = "source")'
+          pak::local_install(".")
+          
       - name: Test package loading
         run: |
           Rscript -e "library(ShinyCell2)" || { echo "❌ Failed to load ShinyCell2 package"; exit 1; }
