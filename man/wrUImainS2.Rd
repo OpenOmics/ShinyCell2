@@ -4,7 +4,7 @@
 \alias{wrUImainS2}
 \title{Write code for ui.R}
 \usage{
-wrUImainS2(prefix, ptsiz)
+wrUImainS2(prefix, ptsiz, hasMultiSlides = FALSE)
 }
 \description{
 Write code for ui.R

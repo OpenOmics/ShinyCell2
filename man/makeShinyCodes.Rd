@@ -17,21 +17,21 @@ makeShinyCodes(
 \arguments{
 \item{shiny.title}{specify the overall title for shiny app}
 
-\item{shiny.footnotes}{text for shiny app footnote. When given as a list, 
-citation can be inserted by specifying author, title, journal, volume, 
+\item{shiny.footnotes}{text for shiny app footnote. When given as a list,
+citation can be inserted by specifying author, title, journal, volume,
 page, year, doi, link. See example below.}
 
-\item{shiny.prefix}{specify file prefix for each dataset. Must match the 
+\item{shiny.prefix}{specify file prefix for each dataset. Must match the
 prefix used in \code{makeShinyFiles}}
 
-\item{shiny.headers}{specify the tab header names for each dataset. Length 
-must match that of \code{shiny.prefix}. Note that this is ignored if 
+\item{shiny.headers}{specify the tab header names for each dataset. Length
+must match that of \code{shiny.prefix}. Note that this is ignored if
 there is only one dataset}
 
 \item{shiny.dir}{specify directory to create the shiny app in}
 
-\item{defPtSiz}{specify default point size for single cells. For example, a 
-smaller size can be used if you have many cells in your dataset. A single 
+\item{defPtSiz}{specify default point size for single cells. For example, a
+smaller size can be used if you have many cells in your dataset. A single
 value can be specified to set the point size for all datasets. Otherwise,
 users have to specify one value for each dataset}
 
@@ -41,11 +41,11 @@ users have to specify one value for each dataset}
 server.R and ui.R required for shiny app
 }
 \description{
-Generate code files required for shiny app for both single-dataset and 
-multi-dataset scenarios. Specifically, two R scripts will be generated, 
-namely \code{server.R} and \code{ui.R}. Note that \code{makeShinyFiles} has 
-to be ran prior to make the necessary data files for each dataset included. 
-The prefix used in \code{makeShinyFiles} have to be then supplied in this 
+Generate code files required for shiny app for both single-dataset and
+multi-dataset scenarios. Specifically, two R scripts will be generated,
+namely \code{server.R} and \code{ui.R}. Note that \code{makeShinyFiles} has
+to be ran prior to make the necessary data files for each dataset included.
+The prefix used in \code{makeShinyFiles} have to be then supplied in this
 function.
 }
 \examples{
@@ -56,14 +56,14 @@ citation = list(
   journal = "Nature",
   volume  = "586",
   page    = "101-107",
-  year    = "2020", 
+  year    = "2020",
   doi     = "10.1038/s41586-020-2734-6",
   link    = "https://www.nature.com/articles/s41586-020-2734-6")
 makeShinyCodes(shiny.title = "scRNA-seq shiny app", shiny.footnotes = "",
                shiny.prefix = c("sc1", "sc2"), defPtSiz = c(1.25, 1.5),
                shiny.headers = c("dataset1", "dataset2"),
                shiny.dir = "shinyApp/")
-               
+
 }
 \author{
 John F. Ouyang
