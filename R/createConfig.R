@@ -88,7 +88,8 @@ createConfig <- function(obj, meta.to.include = NA, legendCols = 4,
     
     # Additional preprocessing for categorical metadata
     nLevels = nlevels(objMeta[[iMeta]])
-    if(nLevels <= maxLevels){
+    isCellID = grepl("^cellid$", iMeta, ignore.case = TRUE)
+    if(isCellID || nLevels <= maxLevels) {
       if(nLevels >= 2){
         tmpConf$fID = paste0(levels(objMeta[[iMeta]]), collapse="|")
         tmpConf$fUI = tmpConf$fID

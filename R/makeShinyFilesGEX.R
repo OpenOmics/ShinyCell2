@@ -176,11 +176,6 @@ makeShinyFilesGEX <- function(
     
     # ADDED: Debug the return value
     cat("\n=== Processing genes for assay:", iAssay, "===\n")
-    cat("tmpG class:", class(tmpG), "\n")
-    cat("tmpG length:", length(tmpG), "\n")
-    cat("First few tmpG values:", head(tmpG, 10), "\n")
-    cat("Is tmpG a vector?", is.vector(tmpG), "\n")
-    cat("Is tmpG NULL?", is.null(tmpG), "\n")
     
     # ADDED: Handle NULL or non-vector return
     if(is.null(tmpG) || !is.vector(tmpG) || length(tmpG) == 0){
