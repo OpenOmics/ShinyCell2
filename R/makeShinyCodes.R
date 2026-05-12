@@ -122,6 +122,7 @@ makeShinyCodes <- function(
     readr::write_file(wrSVmainB1(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainB2(i), file = fname, append = TRUE)
     readr::write_file(wrSVmainB3(i), file = fname, append = TRUE)
+    readr::write_file(wrSVmainMOD(i), file = fname, append = TRUE)
   }
   readr::write_file(wrSVpost(), file = fname, append = TRUE)
 
@@ -156,6 +157,7 @@ makeShinyCodes <- function(
     readr::write_file(wrUImainB1(shiny.prefix, defPtSiz[1]), file = fname, append = TRUE)
     readr::write_file(wrUImainB2(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(wrUImainB3(shiny.prefix), file = fname, append = TRUE)
+    readr::write_file(wrUImainMOD(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
   } else {
     for (i in seq_along(shiny.prefix)) {
@@ -220,6 +222,11 @@ makeShinyCodes <- function(
       )
       readr::write_file(
         wrUImainB3(shiny.prefix[i]),
+        file = fname,
+        append = TRUE
+      )
+      readr::write_file(
+        wrUImainMOD(shiny.prefix[i]),
         file = fname,
         append = TRUE
       )
