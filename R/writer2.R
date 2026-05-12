@@ -1071,7 +1071,7 @@ wrUImainB3 <- function(prefix) {
     '             br() \n',
     '      )  # End of column (6 space) \n',
     '    )    # End of fluidRow (4 space) \n',
-    '  )      # End of tab (2 space) \n',
+    '  ),      # End of tab (2 space) \n',
     '  \n'
   )
 }
@@ -1193,7 +1193,6 @@ wrUImainMOD <- function(prefix) {
     '      ) \n',
     '    )    # End of fluidRow (4 space) \n',
     '  )      # End of tab (2 space) \n',
-    '  , \n',
     '  \n'
   )
 }
