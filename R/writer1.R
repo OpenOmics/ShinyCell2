@@ -1568,7 +1568,7 @@ wrSVmainMOD <- function(prefix) {
     '    ) \n',
     '    inpH5 <- paste0("{prefix}assay_", input${prefix}comb_mod_ass, ".h5") \n',
     '    scModuleScore({prefix}gene[[input${prefix}comb_mod_ass]], inpH5, geneList, \n',
-    '                  seed = input${prefix}comb_mod_seed) \n',
+    '                  seed = 42) \n',
     '  }}) \n',
     '\n',
     '  {prefix}comb_mod_dr_oup <- reactive({{ \n',

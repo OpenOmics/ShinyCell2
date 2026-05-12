@@ -1128,8 +1128,6 @@ wrUImainMOD <- function(prefix) {
     '        selectInput("{prefix}comb_mod_ass", "Assay:", \n',
     '                    choices = {prefix}def$assay, \n',
     '                    selected = {prefix}def$assay[1]), \n',
-    '        numericInput("{prefix}comb_mod_seed", "Random seed (background sampling):", \n',
-    '                     value = 42, min = 1, step = 1), \n',
     '        h4(htmlOutput("{prefix}comb_mod_geneTxt")), \n',
     '        br(), \n',
     '        actionButton("{prefix}comb_mod_tog", "Toggle graphics controls"), \n',
