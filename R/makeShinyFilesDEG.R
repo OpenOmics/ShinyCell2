@@ -121,6 +121,28 @@ makeShinyFilesDEG <- function(
     )
   }
 
+  # Validate DEG cluster levels match metadata cluster levels
+  deg_clusters <- sort(unique(as.character(markergenes$cluster)))
+  meta_clusters <- sort(unique(as.character(obj@meta.data[[clusters]])))
+  if (!all(deg_clusters %in% meta_clusters)) {
+    missing <- setdiff(deg_clusters, meta_clusters)
+    stop(
+      "DEG markers contain cluster(s) not found in metadata column '", clusters, "': ",
+      paste(missing, collapse = ", "),
+      "\n  DEG clusters: ", paste(deg_clusters, collapse = ", "),
+      "\n  Metadata clusters: ", paste(meta_clusters, collapse = ", ")
+    )
+  }
+
+  # Validate that the clusters column exists in scConf (i.e. it was not filtered out)
+  if (!clusters %in% scConf$ID && !clusters %in% scConf$UI) {
+    stop(
+      "Cluster label '", clusters, "' was not included in the ShinyCell config (sc1conf). ",
+      "It may have been removed by metadata filtering (rmmeta/unsupported assay pattern). ",
+      "Please ensure this column is retained in the config."
+    )
+  }
+
   # markergene h5 creation
   n_rows <- nrow(markergenes)
   n_cols <- ncol(markergenes)
