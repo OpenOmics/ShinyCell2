@@ -141,8 +141,12 @@ makeShinyCodes <- function(
   readr::write_file(wrUIpre(shiny.title, ganalytics), file = fname, append = TRUE)
   if(length(shiny.prefix) == 1){
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))) {
-      readr::write_file(wrUImainS1(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)
-      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1]), file = fname, append = TRUE)
+      # Load image data to check if multi-slide
+      tmpImg <- readRDS(paste0(shiny.dir, "/", shiny.prefix, "image.rds"))
+      hasMultiSlides <- !is.null(tmpImg$slide_names) &&
+        length(tmpImg$slide_names) > 1
+      readr::write_file(wrUImainS1(shiny.prefix, defPtSiz2[1], hasMultiSlides), file = fname, append = TRUE)
+      readr::write_file(wrUImainS2(shiny.prefix, defPtSiz2[1], hasMultiSlides), file = fname, append = TRUE)
     }
     if(file.exists(paste0(shiny.dir, "/", shiny.prefix, "bw.rds"))){
       readr::write_file(wrUImainT1(shiny.prefix), file = fname, append = TRUE)
