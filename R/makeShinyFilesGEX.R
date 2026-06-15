@@ -135,6 +135,23 @@ makeShinyFilesGEX <- function(
   }
   sc1conf$ID = as.character(sc1conf$ID)     # Remove levels
   
+  # Filter sc1meta to only cells present in all dimension reductions.
+  # A mismatch occurs when the Seurat object contains cells in @meta.data that
+  # are absent from @reductions (e.g. after reference-based mapping or merging).
+  # Indexing a matrix with an unknown rowname throws "subscript out of bounds".
+  if(class(obj)[1] == "Seurat"){
+    for(iDR in dimred.to.use){
+      drCells = rownames(obj@reductions[[iDR]]@cell.embeddings)
+      nBefore = nrow(sc1meta)
+      sc1meta = sc1meta[cellID %in% drCells]
+      nDropped = nBefore - nrow(sc1meta)
+      if(nDropped > 0){
+        warning(paste0(nDropped, " cell(s) in metadata have no embeddings in '",
+                       iDR, "' and were dropped from the Shiny app."))
+      }
+    }
+  }
+
   # Make prefix_dimr.rds
   sc1dimr = list()
   if(class(obj)[1] == "Seurat"){
