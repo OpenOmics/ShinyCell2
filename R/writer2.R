@@ -1291,6 +1291,14 @@ wrUImainS1 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
     } else {
       ''
     },
+    '        selectInput("{prefix}s1inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
+    '          helper(type = "inline", size = "m", fade = TRUE,\n',
+    '                 title = "Cell Info / Gene to colour cells by",\n',
+    '                 content = c("Select cell info / feature to colour cells",\n',
+    '                             "- Categorical covariates have a fixed colour palette",\n',
+    '                             paste0("- Continuous covariates / gene expression are coloured ",\n',
+    '                                    "in a Blue-Yellow-Red colour scheme, which can be ",\n',
+    '                                    "changed in the plot controls"))),\n',
     '        strong("Draw box on plot below to zoom (double-click to reset zoom): "), \n',
     '        plotOutput("{prefix}s1oup1.br", height = "400px",\n',
     '                   brush = brushOpts(id = "{prefix}s1inp1.br", resetOnNew = TRUE),\n',
