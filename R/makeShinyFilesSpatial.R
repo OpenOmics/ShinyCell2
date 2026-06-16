@@ -37,6 +37,24 @@ makeShinyFilesSpatial <- function(
       
       sc1image$slide_names <- slide_names
       
+      # Build human-readable display names from metadata "sample" column
+      # (falls back to internal slide names when no "sample" column exists)
+      slide_display_names <- slide_names
+      if ("sample" %in% colnames(obj@meta.data)) {
+        for (j in seq_along(slide_names)) {
+          sn <- slide_names[j]
+          slide_cells <- Cells(obj@images[[sn]])
+          if (length(slide_cells) > 0) {
+            sample_vals <- obj@meta.data[slide_cells, "sample"]
+            sample_vals <- sample_vals[!is.na(sample_vals)]
+            if (length(sample_vals) > 0) {
+              slide_display_names[j] <- names(sort(table(sample_vals), decreasing = TRUE))[1]
+            }
+          }
+        }
+      }
+      sc1image$slide_display_names <- slide_display_names
+      
       # Initialize lists to store data for all slides
       sc1image$coords <- list()
       sc1image$bg_images <- list()

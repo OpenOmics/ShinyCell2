@@ -50,6 +50,7 @@ wrUIloadT1 <- function(prefix) {
 wrUIloadS1 <- function(prefix) {
   glue::glue(
     '{prefix}image = readRDS("./{prefix}image.rds")\n',
+    'if(is.null({prefix}image$slide_display_names)) {prefix}image$slide_display_names <- {prefix}image$slide_names\n',
     '\n'
   )
 }
@@ -1284,13 +1285,11 @@ wrUImainS1 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
     if(hasMultiSlides) {
       glue::glue(
         '        selectInput("{prefix}s1slide", "Select Slide:",\n',
-        '                    choices = {prefix}image$slide_names,\n',
+        '                    choices = setNames({prefix}image$slide_names, {prefix}image$slide_display_names),\n',
         '                    selected = {prefix}image$slide_names[1]),\n',
         '        br(),\n'
       )
-    } else {
-      ''
-    },
+    }
     '        selectInput("{prefix}s1inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
     '          helper(type = "inline", size = "m", fade = TRUE,\n',
     '                 title = "Cell Info / Gene to colour cells by",\n',
@@ -1434,12 +1433,10 @@ wrUImainS2 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
     if(hasMultiSlides) {
       glue::glue(
         '        selectInput("{prefix}s2slide", "Select Slide:",\n',
-        '                    choices = {prefix}image$slide_names,\n',
+        '                    choices = setNames({prefix}image$slide_names, {prefix}image$slide_display_names),\n',
         '                    selected = {prefix}image$slide_names[1]),\n',
       )
-    } else {
-      ''
-    },
+    }
     '        fluidRow(\n',
     '          column(\n',
     '            6, selectInput("{prefix}s2inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
