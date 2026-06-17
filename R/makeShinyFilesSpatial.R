@@ -81,7 +81,8 @@ makeShinyFilesSpatial <- function(
             imagecol = coords[, "x"],
             imagerow = coords[, "y"]
           )
-          rownames(sc1image$coords[[slide_name]]) <- rownames(coords)
+          # VisiumV2 centroids@coords has NULL rownames; use Cells() for barcodes
+          rownames(sc1image$coords[[slide_name]]) <- Cells(visium_image)
           sc1image$image_types[[slide_name]] <- "VisiumV2"
         } else {
           # VisiumV1 format
