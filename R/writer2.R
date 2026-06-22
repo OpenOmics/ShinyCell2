@@ -50,6 +50,7 @@ wrUIloadT1 <- function(prefix) {
 wrUIloadS1 <- function(prefix) {
   glue::glue(
     '{prefix}image = readRDS("./{prefix}image.rds")\n',
+    'if(is.null({prefix}image$slide_display_names)) {prefix}image$slide_display_names <- {prefix}image$slide_names\n',
     '\n'
   )
 }
@@ -1231,6 +1232,16 @@ wrUImainS1 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
   # Ensure ptsiz is within valid range
   ptsiz_val <- max(slider_min, min(as.numeric(ptsiz), slider_max))
   
+  slide_input_ui <- ""
+  if (hasMultiSlides) {
+    slide_input_ui <- glue::glue(
+      '        selectInput("{prefix}s1slide", "Select Slide:",\n',
+      '                    choices = setNames({prefix}image$slide_names, {prefix}image$slide_display_names),\n',
+      '                    selected = {prefix}image$slide_names[1]),\n',
+      '        br(),\n'
+    )
+  }
+  
   glue::glue(
     '  ### Tab1.s1: Zoom-enable spatial \n',
     '  tabPanel( \n',
@@ -1281,16 +1292,7 @@ wrUImainS1 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
     '    fluidRow( \n',
     '      column( \n',
     '        3, style="border-right: 2px solid black", h4("Information to plot"),\n',
-    if(hasMultiSlides) {
-      glue::glue(
-        '        selectInput("{prefix}s1slide", "Select Slide:",\n',
-        '                    choices = {prefix}image$slide_names,\n',
-        '                    selected = {prefix}image$slide_names[1]),\n',
-        '        br(),\n'
-      )
-    } else {
-      ''
-    },
+    slide_input_ui,
     '        selectInput("{prefix}s1inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',
     '          helper(type = "inline", size = "m", fade = TRUE,\n',
     '                 title = "Cell Info / Gene to colour cells by",\n',
@@ -1381,6 +1383,15 @@ wrUImainS2 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
   # Ensure ptsiz is within valid range
   ptsiz_val <- max(slider_min, min(as.numeric(ptsiz), slider_max))
   
+  slide_input_ui <- ""
+  if (hasMultiSlides) {
+    slide_input_ui <- glue::glue(
+      '        selectInput("{prefix}s2slide", "Select Slide:",\n',
+      '                    choices = setNames({prefix}image$slide_names, {prefix}image$slide_display_names),\n',
+      '                    selected = {prefix}image$slide_names[1]),\n'
+    )
+  }
+  
   glue::glue(
     '  ### Tab1.s2: CellInfo vs AssayExpr on spatial \n',
     '  tabPanel( \n',
@@ -1431,44 +1442,7 @@ wrUImainS2 <- function(prefix, ptsiz, hasMultiSlides = FALSE) {
     '    fluidRow( \n',
     '      column(\n',
     '        6, style="border-right: 2px solid black",\n',
-    if(hasMultiSlides) {
-      glue::glue(
-        '        selectInput("{prefix}s2slide", "Select Slide:",\n',
-        '                    choices = {prefix}image$slide_names,\n',
-        '                    selected = {prefix}image$slide_names[1]),\n',
-        '        fluidRow(\n',
-        '          column(12, style = "margin-top: 10px; margin-bottom: 10px; border-top: 1px solid #ddd; padding-top: 10px;",\n',
-        '            h5("Spatial Transformations", style = "margin-bottom: 5px;"),\n',
-        '            div(style = "display: inline-block; margin-right: 5px;",\n',
-        '              actionButton("{prefix}s2rotCW", "↻ CW", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
-        '            div(style = "display: inline-block; margin-right: 5px;",\n',
-        '              actionButton("{prefix}s2rotCCW", "↺ CCW", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
-        '            div(style = "display: inline-block; margin-right: 5px;",\n',
-        '              actionButton("{prefix}s2flipH", "↔ H", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
-        '            div(style = "display: inline-block; margin-right: 5px;",\n',
-        '              actionButton("{prefix}s2flipV", "↕ V", class = "btn-sm", style = "padding: 2px 8px; font-size: 12px;")),\n',
-        '            div(style = "display: inline-block;",\n',
-        '              actionButton("{prefix}s2reset", "Reset", class = "btn-sm btn-warning", style = "padding: 2px 8px; font-size: 12px;")),\n',
-        '            div(style = "margin-top: 10px; margin-bottom: 5px;",\n',
-        '              strong("Offset:")),\n',
-        '            div(style = "text-align: center; margin-bottom: 3px;",\n',
-        '              actionButton("{prefix}s2offsetUp", "", icon = icon("arrow-up"), \n',
-        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px;")),\n',
-        '            div(style = "text-align: center;",\n',
-        '              actionButton("{prefix}s2offsetLeft", "", icon = icon("arrow-left"), \n',
-        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px; margin-right: 5px;"),\n',
-        '              actionButton("{prefix}s2offsetDown", "", icon = icon("arrow-down"), \n',
-        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px; margin-right: 5px;"),\n',
-        '              actionButton("{prefix}s2offsetRight", "", icon = icon("arrow-right"), \n',
-        '                           class = "btn-xs", style = "width: 30px; height: 30px; padding: 2px; font-size: 14px;")),\n',
-        '            div(style = "text-align: center; margin-top: 3px; font-size: 10px;",\n',
-        '              textOutput("{prefix}s2offsetDisplay"))\n',
-        '          )\n',
-        '        ),\n'
-      )
-    } else {
-      ''
-    },
+    slide_input_ui,
     '        fluidRow(\n',
     '          column(\n',
     '            6, selectInput("{prefix}s2inp1", "Cell metadata to colour plot:", choices = {prefix}conf$UI, selected = {prefix}def$meta1) %>% \n',

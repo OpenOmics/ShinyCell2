@@ -45,6 +45,7 @@ wrSVload <- function(prefix) {
 wrSVloadS1 <- function(prefix) {
   glue::glue(
     '{prefix}image = readRDS("./{prefix}image.rds")\n',
+    'if(is.null({prefix}image$slide_display_names)) {prefix}image$slide_display_names <- {prefix}image$slide_names\n',
     '\n'
   )
 }
