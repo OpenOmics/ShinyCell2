@@ -533,7 +533,7 @@ wrSVmainA2 <- function(prefix) {
     '  output${prefix}a2.dt <- renderDataTable({{\n',
     '    ggData = sc2Dcnum({prefix}conf, {prefix}meta, input${prefix}a2inp1, input${prefix}a2inp2,\n',
     '                      "{prefix}assay_", {prefix}gene, input${prefix}a2ass1, input${prefix}a2ass2, input${prefix}a2sub1, input${prefix}a2sub2,\n',
-    '                      input${prefix}a2min1, input${prefix}a2max1, input${prefix}a2min2, input${prefix}a2max2, input${prefix}a2cut)\n',
+    '                      input${prefix}a2min1, input${prefix}a2max1, input${prefix}a2min2, input${prefix}a2max2)\n',
     '    datatable(ggData, rownames = FALSE, extensions = "Buttons",\n',
     '              options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel")))\n',
     '  }})\n',

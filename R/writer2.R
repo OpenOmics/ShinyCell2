@@ -696,7 +696,6 @@ wrUImainA2 <- function(prefix, ptsiz) {
     '      ),\n',
     '      column(\n',
     '        6, h4("Cell numbers / statistics"), \n',
-    '        numericInput("{prefix}a2cut", "Cutoff for Expression:", value = 0), \n',
     '        dataTableOutput("{prefix}a2.dt") \n',
     '      )  # End of column (6 space) \n',
     '    )    # End of fluidRow (4 space) \n',
