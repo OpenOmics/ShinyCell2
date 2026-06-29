@@ -1213,6 +1213,41 @@ wrUImainMOD <- function(prefix) {
   )
 }
 
+#' Write code for ui.R: text-only Credits tab
+#'
+#' @rdname wrUImainCredits
+#' @export wrUImainCredits
+#'
+wrUImainCredits <- function() {
+  glue::glue(
+    '  ### Tab: Credits \n',
+    '  tabPanel( \n',
+    '    HTML("Credits"), \n',
+    '    h4("Credits"), \n',
+    '    "This interactive single-cell explorer was generated with ShinyCell2 and the ", \n',
+    '    "OpenOmics cell-seek pipeline.", \n',
+    '    br(), br(), \n',
+    '    tags$ul( \n',
+    '      tags$li( \n',
+    '        tags$a(href = "https://github.com/OpenOmics", target = "_blank", \n',
+    '               "OpenOmics on GitHub")), \n',
+    '      tags$li( \n',
+    '        tags$a(href = "https://github.com/OpenOmics/cell-seek", target = "_blank", \n',
+    '               "cell-seek pipeline on GitHub")) \n',
+    '    ), \n',
+    '    br(), \n',
+    '    h4("Citation"), \n',
+    '    "If you use this resource, please cite the cell-seek pipeline:", \n',
+    '    br(), br(), \n',
+    '    tags$blockquote( \n',
+    '      "Vicky Chen, & Skyler Kuhn. (2023). OpenOmics/cell-seek [Computer software]. ", \n',
+    '      tags$a(href = "https://doi.org/10.5281/zenodo.10181524", target = "_blank", \n',
+    '             "https://doi.org/10.5281/zenodo.10181524")) \n',
+    '  )      # End of tab (2 space) \n',
+    '  \n'
+  )
+}
+
 #' Write code for ui.R
 #'
 #' @rdname wrUImainS1
@@ -1667,8 +1702,6 @@ wrUIpost <- function(footnote) {
   glue::glue(
     '    br(), \n',
     '    p({f0}), \n',
-    '    p(em("This webpage was made using "), a("ShinyCell2", \n',
-    '       href = "https://github.com/the-ouyang-lab/ShinyCell2",target="_blank")), \n',
     '    br(),br(),br(),br(),br()  \n',
     '  )))  \n\n\n'
   )

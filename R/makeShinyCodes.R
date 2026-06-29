@@ -163,6 +163,8 @@ makeShinyCodes <- function(
     readr::write_file(wrUImainB3(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(wrUImainMOD(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
+    readr::write_file(wrUImainCredits(), file = fname, append = TRUE)
+    readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
   } else {
     for (i in seq_along(shiny.prefix)) {
       hhh = shiny.headers[i]
@@ -236,6 +238,8 @@ makeShinyCodes <- function(
       )
       readr::write_file(glue::glue('), \n\n\n'), append = TRUE, file = fname)
     }
+    readr::write_file(wrUImainCredits(), file = fname, append = TRUE)
+    readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
   }
   readr::write_file(wrUIpost(shiny.footnotes), file = fname, append = TRUE)
 
