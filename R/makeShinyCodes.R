@@ -99,7 +99,7 @@ makeShinyCodes <- function(
       readr::write_file(wrSVloadT1(i), file = fname, append = TRUE)
     }
   }
-  readr::write_file(wrSVpre(), file = fname, append = TRUE)
+  readr::write_file(wrSVpre(shiny.prefix[1]), file = fname, append = TRUE)
   for (i in shiny.prefix) {
     if (file.exists(paste0(shiny.dir, "/", i, "image.rds"))) {
       readr::write_file(wrSVmainS1(i), file = fname, append = TRUE)
@@ -162,9 +162,12 @@ makeShinyCodes <- function(
     readr::write_file(wrUImainB2(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(wrUImainB3(shiny.prefix), file = fname, append = TRUE)
     readr::write_file(wrUImainMOD(shiny.prefix), file = fname, append = TRUE)
-    readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
+    # Separator comma between the last data tab and the Credits tab. Written as a
+    # plain string (not glue::glue, which trims the trailing newline and would
+    # collapse the comma onto the Credits line). Credits is the final tab, so no
+    # trailing comma follows it - wrUIpost closes navbarPage.
+    readr::write_file(",\n", append = TRUE, file = fname)
     readr::write_file(wrUImainCredits(), file = fname, append = TRUE)
-    readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
   } else {
     for (i in seq_along(shiny.prefix)) {
       hhh = shiny.headers[i]
@@ -238,10 +241,14 @@ makeShinyCodes <- function(
       )
       readr::write_file(glue::glue('), \n\n\n'), append = TRUE, file = fname)
     }
+    # Credits is the final tab; separator comma before it, none after it.
+    readr::write_file(",\n", append = TRUE, file = fname)
     readr::write_file(wrUImainCredits(), file = fname, append = TRUE)
-    readr::write_file(glue::glue(', \n'), append = TRUE, file = fname)
   }
   readr::write_file(wrUIpost(shiny.footnotes), file = fname, append = TRUE)
+  # End the file with the closing "))" line followed by a trailing blank line.
+  # glue::glue trims wrUIpost's trailing newline, so emit both newlines here.
+  readr::write_file("\n\n", append = TRUE, file = fname)
 
   ### Write code for google-analytics.html
   if (!is.na(ganalytics)) {
