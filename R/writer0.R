@@ -14,6 +14,7 @@ wrShFunc <- function() {
     'library(ggpubr) \n',
     'library(grid) \n',
     'library(gridExtra) \n',
+    'library(colourpicker) \n',
     'library(tools) \n',
     'library(shiny) \n',
     '\n',
