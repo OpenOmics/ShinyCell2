@@ -118,7 +118,8 @@ the following code to check if the packages required by the Shiny app exist
 and install them if required:
 ``` r
 reqPkg = c("shiny", "shinyhelper", "data.table", "Matrix", "DT", "magrittr", 
-           "ggplot2", "ggrepel", "hdf5r", "ggdendro", "gridExtra", "ggpubr")
+           "ggplot2", "ggrepel", "hdf5r", "ggdendro", "gridExtra", "ggpubr", 
+           "colourpicker")
 newPkg = reqPkg[!(reqPkg %in% installed.packages()[,"Package"])]
 if(length(newPkg)){install.packages(newPkg)}
 ```
