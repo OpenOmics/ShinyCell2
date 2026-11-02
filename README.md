@@ -1,3 +1,12 @@
+> [!WARNING]
+> **IMPORTANT NOTICE: Development has moved to CellSight!**
+>
+> Future development of this ShinyCell2 fork has moved to **[OpenOmics/CellSight](https://github.com/OpenOmics/CellSight)**. This repository is retained as a read-only archive and is no longer maintained. Please use CellSight for ongoing development, updates, documentation, and issue reporting. 
+>
+> CellSight builds on ShinyCell2 and has evolved into a separate R package with substantial changes and additional features. We gratefully acknowledge the original ShinyCell2 authors for creating the foundation on which this work is built.
+> 
+> To get started with CellSight, please read through our [documentation](https://openomics.github.io/CellSight/).
+
 # ShinyCell2
 `ShinyCell2` is an enhanced R package for creating interactive, lightweight, 
 and shareable web applications to explore single-cell multi-omics and spatial 
@@ -256,4 +265,9 @@ which gene expression assay to plot in the Shiny app?
        extensive customisation options, full R/Bioconductor integration, and a 
        user-friendly interface with low configuration complexity.
 
-
+> [!WARNING]
+> **IMPORTANT NOTICE: Future development has moved to CellSight!**
+>
+> Development of this ShinyCell2 fork has moved to **[OpenOmics/CellSight](https://github.com/OpenOmics/CellSight)**. This repository is retained as a read-only archive and is no longer maintained. Please use CellSight for ongoing development, updates, documentation, and issue reporting.
+>
+> CellSight builds on ShinyCell2 and has evolved into a separate R package with substantial changes and additional features. We gratefully acknowledge the original ShinyCell2 authors for creating the foundation on which this work is built.
